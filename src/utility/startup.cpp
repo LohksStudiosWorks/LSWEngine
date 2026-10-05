@@ -1,5 +1,7 @@
 #include <LSWE/utility/startup.hpp>
 
+#include <cstdlib>
+
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_image.h>
@@ -12,6 +14,14 @@
 
 namespace LSWE {
 namespace Utility {
+
+    static void set_env_cp(const char* name, const char* value) {
+#if defined(_WIN32)
+            _putenv_s(name, value);
+#else
+            setenv(name, value, 1);
+#endif
+    }
 
     AllegroInit::AllegroInit() {
         if (!al_init())
@@ -40,7 +50,7 @@ namespace Utility {
 
     AllegroInitDialog::AllegroInitDialog() {
         if (!al_init_native_dialog_addon()) {
-            setenv("GDK_BACKEND", "x11", 1);
+            set_env_cp("GDK_BACKEND", "x11");
             if (!al_init_native_dialog_addon())
                 throw UtilityException("Could not start Allegro native dialog addon");
         }
