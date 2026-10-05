@@ -2,3 +2,5 @@ _old/
 install/
 build/
 example-build/
+allegro.log
+trace

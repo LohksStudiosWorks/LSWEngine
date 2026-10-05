@@ -12,7 +12,7 @@ namespace Utility {
     /**
      * @brief SingletonOf is a tool to easily allow for Singleton of a class
      * 
-     * You can add `friend class Singleton<Configuration>;` to a class and make its constructor private to
+     * You can add `friend class SingletonOf<Configuration>;` to a class and make its constructor private to
      * require a Singleton of it to be used instead of instantiating it by hand 
      * 
      * @tparam T class to instantiate Singleton of
@@ -54,6 +54,12 @@ namespace Utility {
 
         static std::vector<std::string_view>& get();
     };
+
+/**
+ * @brief Tool to create singleton of a single constructor buildable only by SingletonOf<it>
+ */
+#define MAKE_SINGLETON_CLASS_NAMED(CLASSNAME, ...) \
+    class CLASSNAME { friend class SingletonOf<CLASSNAME>; CLASSNAME(); __VA_ARGS__ }
 
 } // namespace LSWE
 } // namespace Utility
