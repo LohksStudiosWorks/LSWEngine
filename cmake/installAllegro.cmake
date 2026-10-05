@@ -7,6 +7,16 @@ set(WANT_EXAMPLES OFF CACHE BOOL "Build examples" FORCE)
 set(WANT_DEMOS OFF CACHE BOOL "Build demos" FORCE)
 set(WANT_DOCS OFF CACHE BOOL "Build documentation" FORCE)
 
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        dsound
+        winmm
+        ole32
+        ksuser
+        shlwapi
+    )
+endif()
+
 message(STATUS "Fetching Allegro 5...")
 
 FetchContent_Declare(
