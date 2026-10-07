@@ -7,6 +7,7 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 
 #include <cstdlib>
 #include <atomic>
@@ -92,7 +93,7 @@ namespace Utility {
         static std::atomic_bool ran = false;
         if (ran) return;
         
-        if (!al_install_audio())
+        if (!al_install_audio() || !al_init_acodec_addon())
             throw UtilityException("Could not start Allegro audio addon");
             
         ran = true;

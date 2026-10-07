@@ -52,6 +52,19 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>
 )
 
+message(STATUS "Working on OGG stuff...")
+
+if(UNIX AND NOT APPLE)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(VORBIS REQUIRED vorbisfile vorbis ogg)
+    
+    target_include_directories(${PROJECT_NAME} PRIVATE ${VORBIS_INCLUDE_DIRS})
+    target_link_directories(${PROJECT_NAME} PRIVATE ${VORBIS_LIBRARY_DIRS})
+endif()
+
+
+message(STATUS "Linking Allegro...")
+
 target_link_libraries(${PROJECT_NAME} PUBLIC
     allegro
     allegro_main
@@ -68,6 +81,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     allegro_physfs
 )
 
+if(UNIX AND NOT APPLE)
+    # Link the actual vorbis libraries to your engine
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${VORBIS_LIBRARIES})
+endif()
 
 option(BUILD_TESTS "Build tests" ON)
 
