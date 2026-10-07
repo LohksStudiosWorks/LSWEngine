@@ -44,7 +44,7 @@ namespace Utility {
     /**
      * @brief Base for all audio setup. Single setup though
      */
-    MAKE_SINGLETON_CLASS_NAMED(AllegroInitAudio, static void reserve_samples(const uint32_t););
+    MAKE_SINGLETON_CLASS_NAMED(AllegroInitAudio);
 
 
     /// EVENTS

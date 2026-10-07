@@ -39,8 +39,6 @@ namespace Utility {
         friend class SingletonInfo;
 
         struct wrap_constructor;
-
-        static T& get_static_ref();
     };
 
     class SingletonInfo {
@@ -59,7 +57,13 @@ namespace Utility {
  * @brief Tool to create singleton of a single constructor buildable only by SingletonOf<it>
  */
 #define MAKE_SINGLETON_CLASS_NAMED(CLASSNAME, ...) \
-    class CLASSNAME { friend class SingletonOf<CLASSNAME>; CLASSNAME(); __VA_ARGS__ }
+    class CLASSNAME { \
+        friend class SingletonOf<CLASSNAME>; \
+        CLASSNAME() = default; \
+    public: \
+        static void setup(); \
+        __VA_ARGS__ \
+    }
 
 } // namespace LSWE
 } // namespace Utility

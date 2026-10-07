@@ -5,6 +5,14 @@ file(WRITE ${CMAKE_BINARY_DIR}/DartConfiguration.tcl "")
 
 file(GLOB TEST_SOURCES CONFIGURE_DEPENDS src/*.cpp)
 
+if(WIN32)
+    set(TARGET_PLATFORM "Windows")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(TARGET_PLATFORM "Linux")
+else()
+    set(TARGET_PLATFORM ${CMAKE_SYSTEM_NAME})
+endif()
+
 foreach(test_src ${TEST_SOURCES})
     get_filename_component(test_name ${test_src} NAME_WE)
 
@@ -12,7 +20,7 @@ foreach(test_src ${TEST_SOURCES})
 
     target_link_libraries(${test_name} PRIVATE lswe::lsw-engine)
     
-    target_compile_definitions(${test_name} PRIVATE LUNARIS_DEBUG_FLAG_TEST)
+    target_compile_definitions(${test_name} PRIVATE LSWE_DEBUG)
 
-    add_test(NAME ${test_name} COMMAND ${test_name})
+    add_test(NAME ${test_name} COMMAND ${test_name} ${TARGET_PLATFORM})
 endforeach()

@@ -2,6 +2,7 @@ include(FetchContent)
 
 set(SHARED OFF CACHE BOOL "Build shared libraries" FORCE)
 
+set(WANT_UNSTABLE ON CACHE BOOL "Enable Allegro unstable API" FORCE)
 set(WANT_TESTS OFF CACHE BOOL "Build tests" FORCE)
 set(WANT_EXAMPLES OFF CACHE BOOL "Build examples" FORCE)
 set(WANT_DEMOS OFF CACHE BOOL "Build demos" FORCE)
@@ -22,6 +23,7 @@ function(fix_allegro_interface_includes target_name)
     if(TARGET ${target_name})
         get_target_property(inc_dirs ${target_name} INTERFACE_INCLUDE_DIRECTORIES)
         set_property(TARGET ${target_name} PROPERTY INTERFACE_INCLUDE_DIRECTORIES "")
+        target_compile_definitions(${target_name} INTERFACE ALLEGRO_STATICLINK)
         
         if(inc_dirs)
             foreach(dir IN LISTS inc_dirs)

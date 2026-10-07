@@ -23,7 +23,10 @@ class DummyTest{};
 
 using namespace LSWE::Utility;
 
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
+    const std::string platform = (argc > 1) ? argv[1] : "Linux";
+    std::cout << "Running test on " << platform << "..." << std::endl;
+    
     if (times_created_for_test != 0) {
         std::cerr << "Init of app did not start zeroed." << std::endl;
         return 1;

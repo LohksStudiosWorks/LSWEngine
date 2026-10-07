@@ -1,7 +1,5 @@
 #include <LSWE/utility/startup.hpp>
 
-#include <cstdlib>
-
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_image.h>
@@ -9,6 +7,9 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_audio.h>
+
+#include <cstdlib>
+#include <atomic>
 
 #include <LSWE/exception/utility_exception.hpp>
 
@@ -23,68 +24,118 @@ namespace Utility {
 #endif
     }
 
-    AllegroInit::AllegroInit() {
+    void AllegroInit::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+        
+#ifndef _WIN32
+        set_env_cp("GDK_BACKEND", "x11");
+#endif
+
         if (!al_init())
             throw UtilityException("Could not start Allegro system");
+
+        ran = true;
     }
 
-    AllegroInitPrimitives::AllegroInitPrimitives() {
+    void AllegroInitPrimitives::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+
         if (!al_init_primitives_addon())
             throw UtilityException("Could not start Allegro primitives");
+            
+        ran = true;
     }
 
-    AllegroInitImage::AllegroInitImage() {
+    void AllegroInitImage::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+        
         if (!al_init_image_addon())
             throw UtilityException("Could not start Allegro image addon");
+            
+        ran = true;
     }
 
-    AllegroInitFont::AllegroInitFont() {
+    void AllegroInitFont::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+        
         if (!al_init_font_addon())
             throw UtilityException("Could not start Allegro font addon");
+            
+        ran = true;
     }
 
-    AllegroInitTTF::AllegroInitTTF() {
+    void AllegroInitTTF::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+        
         if (!al_init_ttf_addon())
             throw UtilityException("Could not start Allegro TTF addon");
+            
+        ran = true;
     }
 
-    AllegroInitDialog::AllegroInitDialog() {
-        if (!al_init_native_dialog_addon()) {
-            set_env_cp("GDK_BACKEND", "x11");
-            if (!al_init_native_dialog_addon())
-                throw UtilityException("Could not start Allegro native dialog addon");
-        }
+    void AllegroInitDialog::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+
+        if (!al_init_native_dialog_addon())
+            throw UtilityException("Could not start Allegro native dialog addon");
+            
+        ran = true;
     }
 
-    AllegroInitAudio::AllegroInitAudio() {
+    void AllegroInitAudio::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+        
         if (!al_install_audio())
             throw UtilityException("Could not start Allegro audio addon");
-        reserve_samples(8); // at least 8
+            
+        ran = true;
     }
 
-    void AllegroInitAudio::reserve_samples(const uint32_t samples) {
-        if (!al_reserve_samples(samples))
-            throw UtilityException("Could not start Allegro audio: failed to reserve 8");
-    }
-
-    AllegroInitKeyboard::AllegroInitKeyboard() {
+    void AllegroInitKeyboard::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+        
         if (!al_install_keyboard())
             throw UtilityException("Could not start Allegro keyboard");
+            
+        ran = true;
     }
 
-    AllegroInitMouse::AllegroInitMouse() {
+    void AllegroInitMouse::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+        
         if (!al_install_mouse())
             throw UtilityException("Could not start Allegro mouse");
+            
+        ran = true;
     }
 
-    AllegroInitJoystick::AllegroInitJoystick() {
+    void AllegroInitJoystick::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+        
         if (!al_install_joystick()) 
             throw UtilityException("Could not start Allegro joystick");
+            
+        ran = true;
     }
 
-    AllegroInitTouch::AllegroInitTouch() {
+    void AllegroInitTouch::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+        
         if (!al_install_touch_input())
             throw UtilityException("Could not start Allegro touch");
+            
+        ran = true;
     }
 
 } // namespace LSWE

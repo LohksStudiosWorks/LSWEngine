@@ -39,8 +39,10 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_compile_definitions(${PROJECT_NAME}
-    PRIVATE
+    PUBLIC
+        ALLEGRO_UNSTABLE
         ALLEGRO_STATICLINK
+    PRIVATE
         $<$<CONFIG:Debug>:LSWE_DEBUG>
         $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=0x0A00>
 )
