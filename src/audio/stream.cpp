@@ -3,25 +3,25 @@
 #include <LSWE/utility/startup.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     Stream Stream::create(size_t fragment_count, unsigned int frag_samples, unsigned int freq, ALLEGRO_AUDIO_DEPTH depth, ALLEGRO_CHANNEL_CONF conf) {
-        SingletonOf<AllegroInit>::instance().setup();
-        SingletonOf<AllegroInitAudio>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
         return Stream(al_create_audio_stream(fragment_count, frag_samples, freq, depth, conf));
     }
 
     Stream Stream::load(const char* filename, size_t buffer_count, unsigned samples) {
-        SingletonOf<AllegroInit>::instance().setup();
-        SingletonOf<AllegroInitAudio>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
         return Stream(al_load_audio_stream(filename, buffer_count, samples));
     }
 
     Stream Stream::load(ALLEGRO_FILE* file, const char* ident, size_t buffer_count, unsigned samples) {
-        SingletonOf<AllegroInit>::instance().setup();
-        SingletonOf<AllegroInitAudio>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
         return Stream(al_load_audio_stream_f(file, ident, buffer_count, samples));
     }
@@ -156,4 +156,4 @@ namespace Utility {
 
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

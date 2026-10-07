@@ -3,7 +3,7 @@
 #include <LSWE/utility/startup.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     std::optional<ALLEGRO_SAMPLE_ID> Sample::play(float gain, float pan, float speed, ALLEGRO_PLAYMODE loop) {
         ALLEGRO_SAMPLE_ID id;
@@ -17,22 +17,22 @@ namespace Utility {
     }
 
     Sample Sample::create(void* buf, unsigned samples, unsigned freq, ALLEGRO_AUDIO_DEPTH depth, ALLEGRO_CHANNEL_CONF conf, bool free_buf) {
-        SingletonOf<AllegroInit>::instance().setup();
-        SingletonOf<AllegroInitAudio>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
         return Sample(al_create_sample(buf, samples, freq, depth, conf, free_buf));
     }
 
     Sample Sample::load(const char* path) {
-        SingletonOf<AllegroInit>::instance().setup();
-        SingletonOf<AllegroInitAudio>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
         return Sample(al_load_sample(path));
     }
 
     Sample Sample::load(ALLEGRO_FILE* file, const char* ident) {
-        SingletonOf<AllegroInit>::instance().setup();
-        SingletonOf<AllegroInitAudio>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
         return Sample(al_load_sample_f(file, ident));
     }
@@ -78,4 +78,4 @@ namespace Utility {
     {}
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

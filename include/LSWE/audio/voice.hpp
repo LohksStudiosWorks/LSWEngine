@@ -7,7 +7,7 @@
 #include <memory>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     /**
      * @brief Voice is a representation of a device, generally, like your headphones.
@@ -47,8 +47,8 @@ namespace Utility {
         Voice(ALLEGRO_VOICE*&& voice);
         Voice();
 
-        LazyPointer<ALLEGRO_VOICE> m_voice;
+        Utility::LazyPointer<ALLEGRO_VOICE> m_voice;
     };
 
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

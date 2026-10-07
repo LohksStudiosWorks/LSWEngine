@@ -4,18 +4,18 @@
 #include <LSWE/exception/voice_exception.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     Voice Voice::create(unsigned int freq, ALLEGRO_AUDIO_DEPTH depth, ALLEGRO_CHANNEL_CONF chan_conf) {
-        SingletonOf<AllegroInit>::instance().setup();
-        SingletonOf<AllegroInitAudio>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
         return Voice(al_create_voice(freq, depth, chan_conf));
     }
 
     Voice Voice::get_default() {
-        SingletonOf<AllegroInit>::instance().setup();
-        SingletonOf<AllegroInitAudio>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
         return Voice();
     }
@@ -50,19 +50,19 @@ namespace Utility {
 
     Voice& Voice::operator<<(ALLEGRO_AUDIO_STREAM* audio_stream) {
         if (!attach(audio_stream)) 
-            throw VoiceException("Could not attach audio stream to voice!");
+            throw Utility::VoiceException("Could not attach audio stream to voice!");
         return *this;
     }
 
     Voice& Voice::operator<<(ALLEGRO_MIXER* mixer) {
         if (!attach(mixer)) 
-            throw VoiceException("Could not attach mixer to voice!");
+            throw Utility::VoiceException("Could not attach mixer to voice!");
         return *this;
     }
 
     Voice& Voice::operator<<(ALLEGRO_SAMPLE_INSTANCE* sample_instance) {        
         if (!attach(sample_instance)) 
-            throw VoiceException("Could not attach sample instance to voice!");
+            throw Utility::VoiceException("Could not attach sample instance to voice!");
         return *this;
     }
 
@@ -107,4 +107,4 @@ namespace Utility {
     {}
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

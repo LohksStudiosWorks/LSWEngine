@@ -4,18 +4,18 @@
 #include <LSWE/exception/mixer_exception.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     Mixer Mixer::create(unsigned int freq, ALLEGRO_AUDIO_DEPTH depth, ALLEGRO_CHANNEL_CONF chan_conf) {
-        SingletonOf<AllegroInit>::instance().setup();
-        SingletonOf<AllegroInitAudio>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
         return Mixer(al_create_mixer(freq, depth, chan_conf));
     }
 
     Mixer Mixer::get_default() {
-        SingletonOf<AllegroInit>::instance().setup();
-        SingletonOf<AllegroInitAudio>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
         return Mixer();
     }
@@ -50,19 +50,19 @@ namespace Utility {
 
     Mixer& Mixer::operator<<(ALLEGRO_AUDIO_STREAM* audio_stream) {
         if (!attach(audio_stream)) 
-            throw MixerException("Could not attach audio stream to mixer!");
+            throw Utility::MixerException("Could not attach audio stream to mixer!");
         return *this;
     }
 
     Mixer& Mixer::operator<<(ALLEGRO_MIXER* mixer) {
         if (!attach(mixer)) 
-            throw MixerException("Could not attach mixer to mixer!");
+            throw Utility::MixerException("Could not attach mixer to mixer!");
         return *this;
     }
 
     Mixer& Mixer::operator<<(ALLEGRO_SAMPLE_INSTANCE* sample_instance) {        
         if (!attach(sample_instance)) 
-            throw MixerException("Could not attach sample instance to mixer!");
+            throw Utility::MixerException("Could not attach sample instance to mixer!");
         return *this;
     }
 
@@ -131,4 +131,4 @@ namespace Utility {
     {}
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

@@ -6,7 +6,7 @@
 #include <LSWE/utility/memory.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     class Recorder {
     public:
@@ -27,9 +27,9 @@ namespace Utility {
     private:
         Recorder(ALLEGRO_AUDIO_RECORDER*&& recorder);
 
-        LazyPointer<ALLEGRO_AUDIO_RECORDER> m_recorder;
+        Utility::LazyPointer<ALLEGRO_AUDIO_RECORDER> m_recorder;
     };
 
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

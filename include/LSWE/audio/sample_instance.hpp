@@ -7,7 +7,7 @@
 #include <LSWE/audio/sample.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     class SampleInstance {
     public:
@@ -44,7 +44,7 @@ namespace Utility {
     private:
         SampleInstance(ALLEGRO_SAMPLE_INSTANCE*&& sample_instance);
 
-        LazyPointer<ALLEGRO_SAMPLE_INSTANCE> m_instance;
+        Utility::LazyPointer<ALLEGRO_SAMPLE_INSTANCE> m_instance;
     };
 
     // Backward compatibility, at least a bit. Track was SampleInstance.
@@ -52,4 +52,4 @@ namespace Utility {
 
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

@@ -22,5 +22,7 @@ foreach(test_src ${TEST_SOURCES})
     
     target_compile_definitions(${test_name} PRIVATE LSWE_DEBUG)
 
+    b_embed(${test_name} "resources/7. Continuity.ogg")
+
     add_test(NAME ${test_name} COMMAND ${test_name} ${TARGET_PLATFORM})
 endforeach()

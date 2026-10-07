@@ -6,7 +6,7 @@
 #include <LSWE/utility/memory.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     class Stream {
     public:
@@ -54,24 +54,8 @@ namespace Utility {
     private:
         Stream(ALLEGRO_AUDIO_STREAM*&& stream);
 
-        LazyPointer<ALLEGRO_AUDIO_STREAM> m_stream;
+        Utility::LazyPointer<ALLEGRO_AUDIO_STREAM> m_stream;
     };
-
-    /*class Stream {
-    public:
-        Stream(const std::string& path);
-        Stream(Stream&& oth) noexcept;
-
-        void operator=(Stream&& oth);
-
-        
-        
-        bool valid() const;
-        operator bool() const;
-    private:        
-        LazyPointer<ALLEGRO_AUDIO_STREAM> m_stream;
-    };*/ 
-
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

@@ -24,6 +24,7 @@ endforeach()
 add_library(${PROJECT_NAME})
 add_library(lswe::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
+include(cmake/installBatteryEmbed.cmake)
 include(cmake/installAllegro.cmake)
 include(cmake/MinGWFix.cmake)
 

@@ -3,9 +3,12 @@
 #include <LSWE/utility/startup.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     Recorder Recorder::create(size_t fragment_count, unsigned int frag_samples, unsigned int freq, ALLEGRO_AUDIO_DEPTH depth, ALLEGRO_CHANNEL_CONF conf) {
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
+        
         return Recorder(al_create_audio_recorder(fragment_count, frag_samples, freq, depth, conf));
     }
     
@@ -46,4 +49,4 @@ namespace Utility {
     {}
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

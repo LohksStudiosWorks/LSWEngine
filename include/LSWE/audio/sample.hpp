@@ -8,7 +8,7 @@
 #include <LSWE/utility/memory.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     class SampleInstance;
 
@@ -35,8 +35,8 @@ namespace Utility {
     private:
         Sample(ALLEGRO_SAMPLE*&& sample);
 
-        LazyPointer<ALLEGRO_SAMPLE> m_sample;
+        Utility::LazyPointer<ALLEGRO_SAMPLE> m_sample;
     };
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

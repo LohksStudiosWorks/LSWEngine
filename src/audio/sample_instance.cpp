@@ -3,7 +3,7 @@
 #include <LSWE/utility/startup.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     SampleInstance SampleInstance::create(const Sample& sample) {
         return SampleInstance(al_create_sample_instance(sample));
@@ -110,4 +110,4 @@ namespace Utility {
     {}
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio

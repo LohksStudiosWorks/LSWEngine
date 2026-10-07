@@ -6,7 +6,7 @@
 #include <LSWE/utility/memory.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Audio {
 
     class Mixer {
     public:
@@ -49,9 +49,9 @@ namespace Utility {
         Mixer(ALLEGRO_MIXER*&& mixer);
         Mixer();
 
-        LazyPointer<ALLEGRO_MIXER> m_mixer;
+        Utility::LazyPointer<ALLEGRO_MIXER> m_mixer;
     };
 
     
 } // namespace LSWE
-} // namespace Utility
+} // namespace Audio
