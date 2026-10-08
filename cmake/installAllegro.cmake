@@ -14,7 +14,7 @@ FetchContent_Declare(
     allegro5
     GIT_REPOSITORY https://github.com/liballeg/allegro5.git
     GIT_TAG        5.2.11.3
-    EXCLUDE_FROM_ALL
+    
 )
 
 FetchContent_MakeAvailable(allegro5)

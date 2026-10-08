@@ -4,7 +4,6 @@
 #include <allegro5/allegro_audio.h>
 
 #include <LSWE/utility/memory.hpp>
-#include <memory>
 
 namespace LSWE {
 namespace Audio {

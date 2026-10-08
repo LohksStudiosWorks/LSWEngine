@@ -16,7 +16,7 @@ namespace Utility {
     }
 
     template<typename T>
-    LazyPointer<T>::LazyPointer(T*&& ptr, void (*destroyer)(T*)) 
+    LazyPointer<T>::LazyPointer(T*&& ptr, std::function<void(T*)> destroyer) 
         : m_raw(std::exchange(ptr, nullptr)), m_destroy(destroyer)
     {
         if (!m_destroy && m_raw)
@@ -34,14 +34,15 @@ namespace Utility {
     }
 
     template<typename T>
-    void LazyPointer<T>::reset(T*&& ptr, void (*destroyer)(T*)) {
+    void LazyPointer<T>::reset(T*&& ptr, std::optional<std::function<void(T*)>> destroyer) {
         if (m_raw)
             m_destroy(m_raw);
         m_raw = std::exchange(ptr, nullptr);
-        m_destroy = destroyer;
 
-        if (!m_destroy && m_raw)
+        if (!destroyer.has_value() && m_raw)
             throw UtilityException("LazyPointer got pointer, but no destructor, on reset!");
+
+        m_destroy = destroyer.value();
     }
     
     template<typename T>

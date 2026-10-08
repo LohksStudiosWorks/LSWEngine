@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <functional>
+#include <optional>
 
 namespace LSWE {
 namespace Utility {
@@ -12,14 +14,14 @@ namespace Utility {
         void operator=(const LazyPointer&) = delete;
 
         LazyPointer(LazyPointer&& oth);
-        LazyPointer(T*&& ptr, void (*destroyer)(T*));
+        LazyPointer(T*&& ptr, std::function<void(T*)> destroyer);
         LazyPointer() = default;
 
         ~LazyPointer();
 
         void operator=(LazyPointer&& oth);
 
-        void reset(T*&& ptr = nullptr, void (*destroyer)(T*) = nullptr);
+        void reset(T*&& ptr = nullptr, std::optional<std::function<void(T*)>> destroyer = std::nullopt);
 
         T* get() const;
 
@@ -27,7 +29,7 @@ namespace Utility {
         const T* operator->() const;
     private:
         T* m_raw{};
-        void (*m_destroy)(T*){};
+        std::function<void(T*)> m_destroy;
     };
     
 } // namespace LSWE
