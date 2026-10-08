@@ -74,14 +74,15 @@ int main(int argc, char **argv) {
 
         if (play.path_now != plays.first) {
             plays.first = play.path_now;
+            if (plays.second) {
+                plays.second->instance.stop();
+                plays.second.reset();
+            }
             if (!download_from(sanitize_url(plays.first).c_str(), buf)) {
                 std::cout << "\nFail loading from '" << plays.first << "'. Trying again..." << std::endl;
                 plays.first.clear();
             }
             else {
-                if (plays.second) {
-                    plays.second->instance.stop();
-                }
                 plays.second = std::make_unique<playing_instance>(buf.data(), buf.size());
                 mixer << plays.second->instance;
                 plays.second->instance.set_position(plays.second->sample.get_frequency() * play.time_curr);
