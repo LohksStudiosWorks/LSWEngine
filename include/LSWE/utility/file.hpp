@@ -3,7 +3,9 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_memfile.h>
 
-#include <LSWE/utility/memory.hpp>
+#include <memory>
+#include <vector>
+#include <functional>
 
 namespace LSWE {
 namespace Utility {
@@ -38,8 +40,8 @@ namespace Utility {
         int getc();
         int putc(int c);
 
-		virtual int printformat(const char* format, ...);
-		virtual int vprintformat(const char* format, va_list args);
+		int printformat(const char* format, ...);
+		int vprintformat(const char* format, va_list args);
 
         int16_t read16le();
         int16_t read16be();
@@ -94,11 +96,11 @@ namespace Utility {
         int64_t size() const;
 
         operator ALLEGRO_FILE*() const;
-    private:
-        File(ALLEGRO_FILE*&& file);
-        File(ALLEGRO_FILE*&& file, std::function<void(ALLEGRO_FILE*)> destroyer);
+    protected:
+        File(ALLEGRO_FILE* file);
+        File(ALLEGRO_FILE* file, std::function<void(ALLEGRO_FILE*)> destroyer);
 
-        LazyPointer<ALLEGRO_FILE> m_file;
+        std::shared_ptr<ALLEGRO_FILE> m_file;
     };
 
 } // namespace LSWE

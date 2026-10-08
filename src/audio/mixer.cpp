@@ -24,8 +24,8 @@ namespace Audio {
         al_set_default_mixer(m_mixer.get());
     }
 
-    void Mixer::restore_default() {
-        al_restore_default_mixer();
+    bool Mixer::restore_default() {
+        return al_restore_default_mixer();
     }
 
     bool Mixer::reserve_default_samples(int samples) {
@@ -118,17 +118,27 @@ namespace Audio {
         return al_set_mixer_postprocess_callback(m_mixer.get(), pp_callback, pp_callback_userdata);
     }
 
-    Mixer::operator ALLEGRO_MIXER*() {
+    Mixer::operator ALLEGRO_MIXER*() const {
         return m_mixer.get();
     }
 
-    Mixer::Mixer(ALLEGRO_MIXER*&& mixer) 
-        : m_mixer(std::move(mixer), al_destroy_mixer)
+    Mixer::Mixer(ALLEGRO_MIXER* mixer) 
+        : m_mixer(mixer, al_destroy_mixer)
     {}
 
     Mixer::Mixer()
-        : m_mixer(al_get_default_mixer(), [](ALLEGRO_MIXER* v){})
-    {}
+    {
+        ALLEGRO_MIXER* default_mixer = al_get_default_mixer();
+        if (!default_mixer) {
+            if (!Mixer::restore_default())
+                throw Utility::MixerException("Cannot restore default mixer!");
+            default_mixer = al_get_default_mixer();
+        }
+        if (!default_mixer)
+            throw Utility::MixerException("Cannot get default mixer working!");
+        
+        m_mixer = std::shared_ptr<ALLEGRO_MIXER>(default_mixer, [](ALLEGRO_MIXER* v){});
+    }
     
 } // namespace LSWE
 } // namespace Audio

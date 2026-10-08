@@ -101,12 +101,12 @@ namespace Audio {
         return al_detach_sample_instance(m_instance.get());
     }
 
-    SampleInstance::operator ALLEGRO_SAMPLE_INSTANCE*() {
+    SampleInstance::operator ALLEGRO_SAMPLE_INSTANCE*() const {
         return m_instance.get();
     }
 
-    SampleInstance::SampleInstance(ALLEGRO_SAMPLE_INSTANCE*&& sample_instance) 
-        : m_instance(std::move(sample_instance), al_destroy_sample_instance)
+    SampleInstance::SampleInstance(ALLEGRO_SAMPLE_INSTANCE* sample_instance) 
+        : m_instance(sample_instance, al_destroy_sample_instance)
     {}
     
 } // namespace LSWE

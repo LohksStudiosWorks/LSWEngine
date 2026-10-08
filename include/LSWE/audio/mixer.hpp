@@ -3,7 +3,7 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_audio.h>
 
-#include <LSWE/utility/memory.hpp>
+#include <memory>
 
 namespace LSWE {
 namespace Audio {
@@ -14,7 +14,7 @@ namespace Audio {
         static Mixer get_default();
 
         void set_as_default();
-        static void restore_default();
+        static bool restore_default();
 
         static bool reserve_default_samples(int samples);
 
@@ -44,12 +44,12 @@ namespace Audio {
 
         bool set_postprocess_callback(void (*pp_callback)(void *buf, unsigned int samples, void *data), void *pp_callback_userdata);
         
-        operator ALLEGRO_MIXER*();
+        operator ALLEGRO_MIXER*() const;
     private:
-        Mixer(ALLEGRO_MIXER*&& mixer);
+        Mixer(ALLEGRO_MIXER* mixer);
         Mixer();
 
-        Utility::LazyPointer<ALLEGRO_MIXER> m_mixer;
+        std::shared_ptr<ALLEGRO_MIXER> m_mixer;
     };
 
     

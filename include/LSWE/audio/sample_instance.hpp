@@ -3,7 +3,8 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_audio.h>
 
-#include <LSWE/utility/memory.hpp>
+#include <memory>
+
 #include <LSWE/audio/sample.hpp>
 
 namespace LSWE {
@@ -40,11 +41,11 @@ namespace Audio {
         
         bool detach();
         
-        operator ALLEGRO_SAMPLE_INSTANCE*();
+        operator ALLEGRO_SAMPLE_INSTANCE*() const;
     private:
-        SampleInstance(ALLEGRO_SAMPLE_INSTANCE*&& sample_instance);
+        SampleInstance(ALLEGRO_SAMPLE_INSTANCE* sample_instance);
 
-        Utility::LazyPointer<ALLEGRO_SAMPLE_INSTANCE> m_instance;
+        std::shared_ptr<ALLEGRO_SAMPLE_INSTANCE> m_instance;
     };
 
     // Backward compatibility, at least a bit. Track was SampleInstance.

@@ -500,12 +500,13 @@ namespace Utility {
         return m_file.get();
     }
 
-    File::File(ALLEGRO_FILE*&& file) 
-        : m_file(std::move(file), al_fclose)
+    File::File(ALLEGRO_FILE* file) 
+        : m_file(file, al_fclose)
     {}
 
-    File::File(ALLEGRO_FILE*&& file, std::function<void(ALLEGRO_FILE*)> destroyer) 
-        : m_file(std::move(file), destroyer)
+    File::File(ALLEGRO_FILE* file, std::function<void(ALLEGRO_FILE*)> destroyer) 
+        : m_file(file, destroyer)
     {}
+	
 } // namespace LSWE
 } // namespace Utility

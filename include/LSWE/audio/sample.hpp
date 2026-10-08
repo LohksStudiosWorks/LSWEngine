@@ -5,7 +5,7 @@
 
 #include <optional>
 
-#include <LSWE/utility/memory.hpp>
+#include <memory>
 
 namespace LSWE {
 namespace Audio {
@@ -33,9 +33,11 @@ namespace Audio {
         
         operator ALLEGRO_SAMPLE*() const;
     private:
-        Sample(ALLEGRO_SAMPLE*&& sample);
+        Sample(ALLEGRO_SAMPLE* sample);
 
-        Utility::LazyPointer<ALLEGRO_SAMPLE> m_sample;
+        friend class SampleInstance;
+
+        std::shared_ptr<ALLEGRO_SAMPLE> m_sample;
     };
     
 } // namespace LSWE

@@ -146,12 +146,12 @@ namespace Audio {
         return al_get_audio_stream_event_source(m_stream.get());
     }
 
-    Stream::operator ALLEGRO_AUDIO_STREAM*() {
+    Stream::operator ALLEGRO_AUDIO_STREAM*() const {
         return m_stream.get();
     }
 
-    Stream::Stream(ALLEGRO_AUDIO_STREAM*&& stream) 
-        : m_stream(std::move(stream), al_destroy_audio_stream)
+    Stream::Stream(ALLEGRO_AUDIO_STREAM* stream) 
+        : m_stream(stream, al_destroy_audio_stream)
     {}
 
     

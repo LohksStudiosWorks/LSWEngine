@@ -3,7 +3,7 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_audio.h>
 
-#include <LSWE/utility/memory.hpp>
+#include <memory>
 
 namespace LSWE {
 namespace Audio {
@@ -43,10 +43,10 @@ namespace Audio {
 
         operator ALLEGRO_VOICE*() const;
     private:
-        Voice(ALLEGRO_VOICE*&& voice);
+        Voice(ALLEGRO_VOICE* voice);
         Voice();
 
-        Utility::LazyPointer<ALLEGRO_VOICE> m_voice;
+        std::shared_ptr<ALLEGRO_VOICE> m_voice;
     };
 
 } // namespace LSWE

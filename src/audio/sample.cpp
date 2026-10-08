@@ -73,8 +73,8 @@ namespace Audio {
         return m_sample.get();
     }
 
-    Sample::Sample(ALLEGRO_SAMPLE*&& sample)
-        : m_sample(std::move(sample), al_destroy_sample)
+    Sample::Sample(ALLEGRO_SAMPLE* sample)
+        : m_sample(sample, al_destroy_sample)
     {}
     
 } // namespace LSWE

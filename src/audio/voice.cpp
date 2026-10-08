@@ -98,8 +98,8 @@ namespace Audio {
         return m_voice.get();
     }
 
-    Voice::Voice(ALLEGRO_VOICE*&& voice) 
-        : m_voice(std::move(voice), al_destroy_voice)
+    Voice::Voice(ALLEGRO_VOICE* voice) 
+        : m_voice(voice, al_destroy_voice)
     {}
 
     Voice::Voice()

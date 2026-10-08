@@ -3,7 +3,7 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_audio.h>
 
-#include <LSWE/utility/memory.hpp>
+#include <memory>
 
 namespace LSWE {
 namespace Audio {
@@ -23,11 +23,11 @@ namespace Audio {
         ALLEGRO_EVENT_SOURCE* get_event_source() const;
 
         operator ALLEGRO_EVENT_SOURCE*() const;
-        operator ALLEGRO_AUDIO_RECORDER*();
+        operator ALLEGRO_AUDIO_RECORDER*() const;
     private:
-        Recorder(ALLEGRO_AUDIO_RECORDER*&& recorder);
+        Recorder(ALLEGRO_AUDIO_RECORDER* recorder);
 
-        Utility::LazyPointer<ALLEGRO_AUDIO_RECORDER> m_recorder;
+        std::shared_ptr<ALLEGRO_AUDIO_RECORDER> m_recorder;
     };
 
     

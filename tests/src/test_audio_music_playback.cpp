@@ -3,9 +3,7 @@
 #include <cstdint>
 #include <battery/embed.hpp>
 
-#include <allegro5/allegro_memfile.h>
-
-using namespace LSWE::Audio;
+using namespace LSWE;
 
 int main(int argc, char *argv[]) {
     const std::string platform = (argc > 1) ? argv[1] : "Linux";
@@ -15,17 +13,13 @@ int main(int argc, char *argv[]) {
 
     al_init();
 
-    ALLEGRO_FILE* fp = al_open_memfile((void*)music_embedded.data(), music_embedded.length(), "rb");
-    if (!fp) {
-        std::cerr << "Could not load mem file in mem" << std::endl;
-        return 1;
-    }
+    auto fp = Utility::File::open_mem((void*)music_embedded.data(), music_embedded.length(), "rb");
 
-    Voice voice = Voice::create();
-    Mixer mixer = Mixer::create();
+    auto voice = Audio::Voice::create();
+    auto mixer = Audio::Mixer::create();
 
-    Sample sample = Sample::load(fp, ".ogg");
-    SampleInstance instance = SampleInstance::create(sample);
+    auto sample = Audio::Sample::load(fp, ".ogg");
+    auto instance = Audio::SampleInstance::create(sample);
 
     voice << mixer;
     mixer << instance;

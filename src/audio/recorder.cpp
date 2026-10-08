@@ -40,12 +40,12 @@ namespace Audio {
         return al_get_audio_recorder_event_source(m_recorder.get());
     }
 
-    Recorder::operator ALLEGRO_AUDIO_RECORDER*() {
+    Recorder::operator ALLEGRO_AUDIO_RECORDER*() const {
         return m_recorder.get();
     }
 
-    Recorder::Recorder(ALLEGRO_AUDIO_RECORDER*&& recorder)
-        : m_recorder(std::move(recorder), al_destroy_audio_recorder)
+    Recorder::Recorder(ALLEGRO_AUDIO_RECORDER* recorder)
+        : m_recorder(recorder, al_destroy_audio_recorder)
     {}
     
 } // namespace LSWE

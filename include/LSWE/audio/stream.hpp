@@ -3,7 +3,7 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_audio.h>
 
-#include <LSWE/utility/memory.hpp>
+#include <memory>
 
 namespace LSWE {
 namespace Audio {
@@ -50,11 +50,11 @@ namespace Audio {
         bool detach();
 
         operator ALLEGRO_EVENT_SOURCE*() const;
-        operator ALLEGRO_AUDIO_STREAM*();
+        operator ALLEGRO_AUDIO_STREAM*() const;
     private:
-        Stream(ALLEGRO_AUDIO_STREAM*&& stream);
+        Stream(ALLEGRO_AUDIO_STREAM* stream);
 
-        Utility::LazyPointer<ALLEGRO_AUDIO_STREAM> m_stream;
+        std::shared_ptr<ALLEGRO_AUDIO_STREAM> m_stream;
     };
     
 } // namespace LSWE
