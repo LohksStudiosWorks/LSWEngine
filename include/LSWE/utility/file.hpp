@@ -103,5 +103,5 @@ namespace Utility {
         std::shared_ptr<ALLEGRO_FILE> m_file;
     };
 
-} // namespace LSWE
 } // namespace Utility
+} // namespace LSWE

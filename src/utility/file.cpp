@@ -508,5 +508,5 @@ namespace Utility {
         : m_file(file, destroyer)
     {}
 	
-} // namespace LSWE
 } // namespace Utility
+} // namespace LSWE

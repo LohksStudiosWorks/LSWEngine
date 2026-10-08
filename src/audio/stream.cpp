@@ -153,7 +153,6 @@ namespace Audio {
     Stream::Stream(ALLEGRO_AUDIO_STREAM* stream) 
         : m_stream(stream, al_destroy_audio_stream)
     {}
-
     
-} // namespace LSWE
 } // namespace Audio
+} // namespace LSWE

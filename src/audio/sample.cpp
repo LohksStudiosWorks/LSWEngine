@@ -77,5 +77,5 @@ namespace Audio {
         : m_sample(sample, al_destroy_sample)
     {}
     
-} // namespace LSWE
 } // namespace Audio
+} // namespace LSWE

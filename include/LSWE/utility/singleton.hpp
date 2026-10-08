@@ -65,7 +65,7 @@ namespace Utility {
         __VA_ARGS__ \
     }
 
-} // namespace LSWE
 } // namespace Utility
+} // namespace LSWE
 
 #include <LSWE/utility/impl/singleton.ipp>

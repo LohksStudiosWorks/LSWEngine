@@ -11,5 +11,5 @@ namespace Utility {
         using std::runtime_error::what;
     };
 
-} // namespace LSWE
 } // namespace Utility
+} // namespace LSWE

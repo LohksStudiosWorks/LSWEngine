@@ -48,5 +48,5 @@ namespace Audio {
         : m_recorder(recorder, al_destroy_audio_recorder)
     {}
     
-} // namespace LSWE
 } // namespace Audio
+} // namespace LSWE

@@ -50,7 +50,6 @@ namespace Audio {
 
     // Backward compatibility, at least a bit. Track was SampleInstance.
     using Track = SampleInstance;
-
     
-} // namespace LSWE
 } // namespace Audio
+} // namespace LSWE

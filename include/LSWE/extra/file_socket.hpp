@@ -49,5 +49,5 @@ namespace Utility {
         FileSocket(ALLEGRO_FILE* file);
     };
 
-} // namespace LSWE
 } // namespace Utility
+} // namespace LSWE

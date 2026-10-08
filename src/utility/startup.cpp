@@ -139,5 +139,5 @@ namespace Utility {
         ran = true;
     }
 
-} // namespace LSWE
 } // namespace Utility
+} // namespace LSWE

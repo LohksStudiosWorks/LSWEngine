@@ -16,5 +16,5 @@ namespace Utility {
         return ref_static;
     }
 
-} // namespace LSWE
 } // namespace Utility
+} // namespace LSWE

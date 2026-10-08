@@ -51,7 +51,6 @@ namespace Audio {
 
         std::shared_ptr<ALLEGRO_MIXER> m_mixer;
     };
-
     
-} // namespace LSWE
 } // namespace Audio
+} // namespace LSWE

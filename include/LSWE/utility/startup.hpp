@@ -69,5 +69,5 @@ namespace Utility {
      */
     MAKE_SINGLETON_CLASS_NAMED(AllegroInitTouch);
     
-} // namespace LSWE
 } // namespace Utility
+} // namespace LSWE

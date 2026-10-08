@@ -57,5 +57,5 @@ namespace Audio {
         std::shared_ptr<ALLEGRO_AUDIO_STREAM> m_stream;
     };
     
-} // namespace LSWE
 } // namespace Audio
+} // namespace LSWE

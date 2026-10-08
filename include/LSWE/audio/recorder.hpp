@@ -29,7 +29,6 @@ namespace Audio {
 
         std::shared_ptr<ALLEGRO_AUDIO_RECORDER> m_recorder;
     };
-
     
-} // namespace LSWE
 } // namespace Audio
+} // namespace LSWE

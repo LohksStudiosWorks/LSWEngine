@@ -22,5 +22,5 @@ namespace Utility {
         return &instance();
     }
     
-} // namespace LSWE
 } // namespace Utility
+} // namespace LSWE

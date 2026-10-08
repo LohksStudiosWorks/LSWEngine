@@ -49,5 +49,5 @@ namespace Audio {
         std::shared_ptr<ALLEGRO_VOICE> m_voice;
     };
 
-} // namespace LSWE
 } // namespace Audio
+} // namespace LSWE

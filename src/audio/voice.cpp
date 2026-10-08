@@ -106,5 +106,5 @@ namespace Audio {
         : m_voice(al_get_default_voice(), [](ALLEGRO_VOICE* v){})
     {}
     
-} // namespace LSWE
 } // namespace Audio
+} // namespace LSWE

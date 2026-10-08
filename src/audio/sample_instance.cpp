@@ -109,5 +109,5 @@ namespace Audio {
         : m_instance(sample_instance, al_destroy_sample_instance)
     {}
     
-} // namespace LSWE
 } // namespace Audio
+} // namespace LSWE

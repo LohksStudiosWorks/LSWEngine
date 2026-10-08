@@ -7,5 +7,5 @@ namespace Utility {
         : std::runtime_error(message)
     {}
 
-} // namespace LSWE
 } // namespace Utility
+} // namespace LSWE

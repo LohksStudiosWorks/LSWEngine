@@ -447,5 +447,6 @@ namespace Utility {
     const ALLEGRO_FILE_INTERFACE *al_get_socket_file_interface() {
         return &detail::socket_interface;
     }
-} // namespace LSWE
+    
 } // namespace Utility
+} // namespace LSWE
