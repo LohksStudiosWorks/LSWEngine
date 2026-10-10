@@ -12,7 +12,7 @@ namespace Utility {
 	class UTFString {
 	public:
 		UTFString();
-		UTFString(const char* str);
+		UTFString(const char* str, ...);
 		UTFString(const std::string& str);
 		UTFString(const uint16_t* const str);
 		UTFString(const UTFString& str);
@@ -42,10 +42,12 @@ namespace Utility {
 		bool insert_bytes(int pos, const UTFString& str);
 		bool insert_bytes(int pos, const std::string& str);
 		bool insert_bytes(int pos, const char* str);
+		bool insert_bytes(int pos, int32_t chr);
 
 		bool insert(int pos, const UTFString& str);
 		bool insert(int pos, const std::string& str);
 		bool insert(int pos, const char* str);
+		bool insert(int pos, int32_t chr);
 
 		// insert at the end
 		bool append(const UTFString&);
@@ -60,7 +62,11 @@ namespace Utility {
 		UTFString& operator+=(const char* str);
 		UTFString operator+(const char* str);
 
-		bool append(const int32_t ch);
+		bool append(int32_t chr);
+		UTFString& operator+=(int32_t chr);
+		UTFString operator+(int32_t chr);
+
+		bool appendf(const char* fmt, ...);
 
 		bool remove_bytes(int pos_byte);
 		bool remove(int pos_symbol);
@@ -79,6 +85,8 @@ namespace Utility {
 		bool assign(const UTFString& str);
 		bool assign(const std::string& str);
 		bool assign(const char* str);
+
+		bool assign_substr(const UTFString& str, int start_pos, int end_pos);
 
 		UTFString& operator=(const UTFString& str);
 		UTFString& operator=(const std::string& str);

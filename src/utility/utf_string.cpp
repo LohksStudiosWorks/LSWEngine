@@ -1,7 +1,10 @@
 #include <LSWE/utility/utf_string.hpp>
 
+#include <stdarg.h>
+
 #include <LSWE/utility/startup.hpp>
 #include <LSWE/exception/general_null_exception.hpp>
+#include <LSWE/exception/utility_exception.hpp>
 
 namespace LSWE {
 namespace Utility {
@@ -13,11 +16,20 @@ namespace Utility {
 			throw Exception::NullException("String was null");
 	}
 
-	UTFString::UTFString(const char* str) {
+	UTFString::UTFString(const char* str, ...) {		
 		Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
-		m_string = std::shared_ptr<ALLEGRO_USTR>(al_ustr_new_from_buffer(str, strlen(str)), al_ustr_free);
+		m_string = std::shared_ptr<ALLEGRO_USTR>(al_ustr_new(""), al_ustr_free);
+
 		if (!m_string)
 			throw Exception::NullException("String was null");
+
+		va_list args;
+		va_start(args, str);
+		const bool success = al_ustr_vappendf(m_string.get(), str, args);
+		va_end(args);
+
+		if (!success)
+			throw Exception::UtilityException("Format on string failed");
 	}
 
 	UTFString::UTFString(const std::string& str) {
@@ -114,6 +126,10 @@ namespace Utility {
 		return al_ustr_insert_cstr(m_string.get(), pos, str);
 	}
 
+	bool UTFString::insert_bytes(int pos, int32_t chr) {
+		return al_ustr_insert_chr(m_string.get(), pos, chr);
+	}
+
 	bool UTFString::insert(int pos, const UTFString& str) {
 		return al_ustr_insert(m_string.get(), al_ustr_offset(m_string.get(), pos), str.m_string.get());
 	}
@@ -124,6 +140,10 @@ namespace Utility {
 
 	bool UTFString::insert(int pos, const char* str) {
 		return al_ustr_insert_cstr(m_string.get(), al_ustr_offset(m_string.get(), pos), str);
+	}
+
+	bool UTFString::insert(int pos, int32_t chr) {
+		return al_ustr_insert_chr(m_string.get(), al_ustr_offset(m_string.get(), pos), chr);
 	}
 
 	bool UTFString::append(const UTFString& str) {
@@ -171,8 +191,27 @@ namespace Utility {
 		return cpy;
 	}
 
-	bool UTFString::append(const int32_t ch) {
-		return al_ustr_append_chr(m_string.get(), ch);
+	bool UTFString::append(int32_t chr) {
+		return al_ustr_append_chr(m_string.get(), chr);
+	}
+
+	UTFString& UTFString::operator+=(int32_t chr) {
+		append(chr);
+		return *this;
+	}
+
+	UTFString UTFString::operator+(int32_t chr) {
+		UTFString cpy(*this);
+		cpy.append(chr);
+		return cpy;
+	}
+
+	bool UTFString::appendf(const char* fmt, ...) {
+		va_list args;
+		va_start(args, fmt);
+		const bool res = al_ustr_vappendf(m_string.get(), fmt, args);
+		va_end(args);
+		return res;
 	}
 
 	bool UTFString::remove_bytes(int pos) {
@@ -221,6 +260,10 @@ namespace Utility {
 
 	bool UTFString::assign(const char* str) {
 		return al_ustr_assign_cstr(m_string.get(), str);
+	}
+
+	bool UTFString::assign_substr(const UTFString& str, int start_pos, int end_pos) {
+		return al_ustr_assign_substr(m_string.get(), str.m_string.get(), start_pos, end_pos);
 	}
 
 	UTFString& UTFString::operator=(const UTFString& str) {
@@ -285,7 +328,7 @@ namespace Utility {
 	}
 
 	int UTFString::find_cset(const UTFString& reject_any_of, int offset, bool offset_bytes, bool return_bytes) const {
-		const auto val = al_ustr_find_set(
+		const auto val = al_ustr_find_cset(
 			m_string.get(), 
 			(offset_bytes ? offset : al_ustr_offset(m_string.get(), offset)),
 			reject_any_of.m_string.get()
