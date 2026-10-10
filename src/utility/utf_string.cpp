@@ -1,6 +1,7 @@
 #include <LSWE/utility/utf_string.hpp>
 
 #include <LSWE/utility/startup.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 
 namespace LSWE {
 namespace Utility {
@@ -8,26 +9,37 @@ namespace Utility {
 	UTFString::UTFString() {
 		Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
 		m_string = std::shared_ptr<ALLEGRO_USTR>(al_ustr_new(""), al_ustr_free);
+		if (!m_string)
+			throw Exception::NullException("String was null");
 	}
 
 	UTFString::UTFString(const char* str) {
 		Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
 		m_string = std::shared_ptr<ALLEGRO_USTR>(al_ustr_new_from_buffer(str, strlen(str)), al_ustr_free);
+		if (!m_string)
+			throw Exception::NullException("String was null");
 	}
 
 	UTFString::UTFString(const std::string& str) {
 		Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
 		m_string = std::shared_ptr<ALLEGRO_USTR>(al_ustr_new_from_buffer(str.c_str(), str.length()), al_ustr_free);
+		if (!m_string)
+			throw Exception::NullException("String was null");
 	}
 
 	UTFString::UTFString(const uint16_t* const str) {
 		Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
 		m_string = std::shared_ptr<ALLEGRO_USTR>(al_ustr_new_from_utf16(str), al_ustr_free);
+		if (!m_string)
+			throw Exception::NullException("String was null");
 	}
 
 	UTFString::UTFString(const UTFString& str)
 		: m_string(std::shared_ptr<ALLEGRO_USTR>(al_ustr_dup(str.m_string.get()), al_ustr_free))
-	{}
+	{
+		if (!m_string)
+			throw Exception::NullException("String was null");
+	}
 
 	UTFString::UTFString(UTFString&& str) noexcept
 		: m_string(std::move(str.m_string))
@@ -37,27 +49,21 @@ namespace Utility {
 		al_ustr_to_buffer(m_string.get(), buf, len);
 	}
 
-	UTFString UTFString::substr_bytes(int start_pos, int end_pos)
-	{
-		UTFString str;
-		str.m_string = std::shared_ptr<ALLEGRO_USTR>(
+	UTFString UTFString::substr_bytes(int start_pos, int end_pos) {		
+		return UTFString(std::shared_ptr<ALLEGRO_USTR>(
 			al_ustr_dup_substr(m_string.get(), start_pos, end_pos), 
 			al_ustr_free
-		);
-		return str;
+		));
 	}
 
-	UTFString UTFString::substr(int start_pos, int end_pos)
-	{
-		UTFString str;
-		str.m_string = std::shared_ptr<ALLEGRO_USTR>(
+	UTFString UTFString::substr(int start_pos, int end_pos) {
+		return UTFString(std::shared_ptr<ALLEGRO_USTR>(
 			al_ustr_dup_substr(
 				m_string.get(),
 				al_ustr_offset(m_string.get(), start_pos), al_ustr_offset(m_string.get(), end_pos)
 			),
 			al_ustr_free
-		);
-		return str;
+		));
 	}
 
 	size_t UTFString::size() const {
@@ -130,7 +136,7 @@ namespace Utility {
 	}
 
 	UTFString UTFString::operator+(const UTFString& str) {
-		UTFString cpy = *this;
+		UTFString cpy(*this);
 		cpy.append(str);
 		return cpy;
 	}
@@ -145,7 +151,7 @@ namespace Utility {
 	}
 
 	UTFString UTFString::operator+(const std::string& str) {
-		UTFString cpy = *this;
+		UTFString cpy(*this);
 		cpy.append(str);
 		return cpy;
 	}
@@ -160,7 +166,7 @@ namespace Utility {
 	}
 
 	UTFString UTFString::operator+(const char* str) {
-		UTFString cpy = *this;
+		UTFString cpy(*this);
 		cpy.append(str);
 		return cpy;
 	}
@@ -375,27 +381,6 @@ namespace Utility {
 		);
 	}
 
-	int UTFString::compare(const UTFString& str, int codepoint_max) const {
-		// Allegro: "Returns zero if the strings are equal, a positive number if us1 comes after us2, else a negative number."
-		return (codepoint_max == -1)
-			? (m_string
-				? (str.m_string 
-					? al_ustr_compare(m_string.get(), str.m_string.get())
-					: 1)
-				: (str.m_string
-					? 1
-					: 0)
-				)
-			: (m_string
-				? (str.m_string
-					? al_ustr_ncompare(m_string.get(), str.m_string.get(), codepoint_max)
-					: 1)
-				: (str.m_string
-					? 1
-					: 0)
-				);
-	}
-
 	bool UTFString::operator==(const UTFString& str) const {
 		return al_ustr_equal(m_string.get(), str.m_string.get());
 	}
@@ -404,8 +389,11 @@ namespace Utility {
 		return !al_ustr_equal(m_string.get(), str.m_string.get());
 	}
 
-	int UTFString::operator<=>(const UTFString& str) const {
-		return compare(str);
+	std::strong_ordering UTFString::operator<=>(const UTFString& str) const {
+		const int res = al_ustr_compare(m_string.get(), str.m_string.get());
+		return res == 0
+			? std::strong_ordering::equal
+			: (res < 0 ? std::strong_ordering::less : std::strong_ordering::greater);
 	}
 
 	bool UTFString::has_prefix(const UTFString& str) const {
@@ -470,8 +458,15 @@ namespace Utility {
 		return m_string.get();
 	}
 
-	UTFString::operator const ALLEGRO_USTR* () const {
+	UTFString::operator const ALLEGRO_USTR*() const {
 		return m_string.get();
+	}
+
+	UTFString::UTFString(std::shared_ptr<ALLEGRO_USTR>&& assign)
+		: m_string(std::move(assign))
+	{
+		if (!m_string)
+			throw Exception::NullException("String was null");
 	}
 
 } // namespace Utility

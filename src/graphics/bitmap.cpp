@@ -2,6 +2,7 @@
 
 #include <LSWE/utility/startup.hpp>
 #include <LSWE/exception/bitmap_exception.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 #include <LSWE/utility/make_temporary_target.hpp>
 
 namespace LSWE {
@@ -291,15 +292,21 @@ namespace Graphics {
                 ? [](ALLEGRO_BITMAP* b){}
                 : al_destroy_bitmap),
         m_parent(parent)
-    {}
+    {
+        if (!m_bitmap)
+            throw Exception::NullException("Bitmap was null");
+    }
 
     Bitmap::Bitmap(std::shared_ptr<ALLEGRO_BITMAP> bitmap_ref)
         : m_bitmap(bitmap_ref), m_parent({})
-    {}
+    {
+        if (!m_bitmap)
+            throw Exception::NullException("Bitmap was null");
+    }
 
     void Bitmap::assert_not_self_target() const {
         if (al_get_target_bitmap() == m_bitmap.get())
-            throw Utility::BitmapException("Cannot target itself (you may have targeted itself in a tool method)");
+            throw Exception::BitmapException("Cannot target itself (you may have targeted itself in a tool method)");
     }
 
     SubBitmap SubBitmap::from(Bitmap& base, int x, int y, int w, int h) {

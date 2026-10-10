@@ -2,6 +2,7 @@
 
 #include <LSWE/utility/startup.hpp>
 #include <LSWE/exception/mixer_exception.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 
 namespace LSWE {
 namespace Audio {
@@ -50,19 +51,19 @@ namespace Audio {
 
     Mixer& Mixer::operator<<(ALLEGRO_AUDIO_STREAM* audio_stream) {
         if (!attach(audio_stream)) 
-            throw Utility::MixerException("Could not attach audio stream to mixer!");
+            throw Exception::MixerException("Could not attach audio stream to mixer!");
         return *this;
     }
 
     Mixer& Mixer::operator<<(ALLEGRO_MIXER* mixer) {
         if (!attach(mixer)) 
-            throw Utility::MixerException("Could not attach mixer to mixer!");
+            throw Exception::MixerException("Could not attach mixer to mixer!");
         return *this;
     }
 
     Mixer& Mixer::operator<<(ALLEGRO_SAMPLE_INSTANCE* sample_instance) {        
         if (!attach(sample_instance)) 
-            throw Utility::MixerException("Could not attach sample instance to mixer!");
+            throw Exception::MixerException("Could not attach sample instance to mixer!");
         return *this;
     }
 
@@ -124,18 +125,21 @@ namespace Audio {
 
     Mixer::Mixer(ALLEGRO_MIXER* mixer) 
         : m_mixer(mixer, al_destroy_mixer)
-    {}
+    {
+        if (!m_mixer)
+            throw Exception::NullException("Mixer was null");
+    }
 
     Mixer::Mixer()
     {
         ALLEGRO_MIXER* default_mixer = al_get_default_mixer();
         if (!default_mixer) {
             if (!Mixer::restore_default())
-                throw Utility::MixerException("Cannot restore default mixer!");
+                throw Exception::NullException("Cannot restore default mixer!");
             default_mixer = al_get_default_mixer();
         }
         if (!default_mixer)
-            throw Utility::MixerException("Cannot get default mixer working!");
+            throw Exception::NullException("Cannot get default mixer working!");
         
         m_mixer = std::shared_ptr<ALLEGRO_MIXER>(default_mixer, [](ALLEGRO_MIXER* v){});
     }

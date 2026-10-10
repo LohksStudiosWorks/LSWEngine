@@ -9,6 +9,5 @@
 #include <LSWE/graphics/native_dialog.hpp>
 #include <LSWE/graphics/shader.hpp>
 #include <LSWE/graphics/transform.hpp>
-#include <LSWE/graphics/utfstring.hpp>
 #include <LSWE/graphics/vertex.hpp>
 #include <LSWE/graphics/video.hpp>

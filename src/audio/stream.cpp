@@ -1,6 +1,7 @@
 #include <LSWE/audio/stream.hpp>
 
 #include <LSWE/utility/startup.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 
 namespace LSWE {
 namespace Audio {
@@ -152,7 +153,10 @@ namespace Audio {
 
     Stream::Stream(ALLEGRO_AUDIO_STREAM* stream) 
         : m_stream(stream, al_destroy_audio_stream)
-    {}
+    {
+        if (!m_stream)
+            throw Exception::NullException("Stream was null");
+    }
     
 } // namespace Audio
 } // namespace LSWE

@@ -1,5 +1,7 @@
 #include <LSWE/utility/make_temporary_target.hpp>
 
+#include <LSWE/exception/general_null_exception.hpp>
+
 namespace LSWE {
 namespace Utility {
 
@@ -7,6 +9,9 @@ namespace Utility {
 
     MakeTemporaryTarget::MakeTemporaryTarget(ALLEGRO_BITMAP* new_target)
     {
+        if (!new_target)
+            throw Exception::NullException("Target bitmap was null");
+            
         m_prev_target = al_get_target_bitmap();
 
         if (m_restore_target = (m_prev_target != new_target)) 

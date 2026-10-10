@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 namespace LSWE {
-namespace Utility {
+namespace Exception {
 
     class VoiceException : public std::runtime_error {
     public:
@@ -11,5 +11,5 @@ namespace Utility {
         using std::runtime_error::what;
     };
 
-} // namespace Utility
+} // namespace Exception
 } // namespace LSWE

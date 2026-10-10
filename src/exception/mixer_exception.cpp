@@ -1,11 +1,11 @@
 #include <LSWE/exception/mixer_exception.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Exception {
 
     MixerException::MixerException(const char* message) noexcept 
         : std::runtime_error(message)
     {}
 
-} // namespace Utility
+} // namespace Exception
 } // namespace LSWE

@@ -4,6 +4,7 @@
 
 #include <string>
 #include <memory>
+#include <compare>
 
 namespace LSWE {
 namespace Utility {
@@ -106,11 +107,9 @@ namespace Utility {
 		bool find_replace_all(const std::string& search, const std::string& replace_with, int offset = 0, bool offset_bytes = true);
 		bool find_replace_all(const char* search, const char* replace_with, int offset = 0, bool offset_bytes = true);
 
-		int compare(const UTFString& str, int codepoint_max = -1) const;
-
 		bool operator==(const UTFString& str) const;
 		bool operator!=(const UTFString& str) const;
-		int operator<=>(const UTFString& str) const;
+		std::strong_ordering operator<=>(const UTFString& str) const;
 
 		bool has_prefix(const UTFString& str) const;
 		bool has_suffix(const UTFString& str) const;
@@ -132,7 +131,9 @@ namespace Utility {
 
 		const ALLEGRO_USTR* u_str() const;
 		operator const ALLEGRO_USTR*() const;
-    public:
+    private:
+		UTFString(std::shared_ptr<ALLEGRO_USTR>&& assign);
+
 		std::shared_ptr<ALLEGRO_USTR> m_string;
 	};
 

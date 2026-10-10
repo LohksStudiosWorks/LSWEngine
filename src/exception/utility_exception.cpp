@@ -1,11 +1,11 @@
 #include <LSWE/exception/utility_exception.hpp>
 
 namespace LSWE {
-namespace Utility {
+namespace Exception {
 
     UtilityException::UtilityException(const char* message) noexcept 
         : std::runtime_error(message)
     {}
 
-} // namespace Utility
+} // namespace Exception
 } // namespace LSWE

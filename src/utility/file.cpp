@@ -2,13 +2,40 @@
 
 #include <memory>
 #include <sstream>
+#include <algorithm>
 #include <stdarg.h>
 
 #include <LSWE/utility/startup.hpp>
 #include <LSWE/exception/file_exception.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 
 namespace LSWE {
 namespace Utility {
+
+	namespace detail {
+
+		template<typename T, typename F, size_t N>
+		T parse_to(File& ref, const char (&rules)[N], F interp_fcn) {
+			std::string _buf;
+			int _tmp{};
+			const auto rule_beg = std::cbegin(rules);
+			const auto rule_end = std::cend(rules);
+
+			while((_tmp = ref.getc()) && !ref.eof()) {
+				if (std::find(rule_beg, rule_end, _tmp) == rule_end) {
+					ref.ungetc(_tmp);
+					break;
+				}
+				_buf += (char)_tmp;
+			}
+			
+			try {
+				return static_cast<T>(interp_fcn(_buf));
+			} catch(...) {
+				throw Exception::FileException("Could not properly parse type from buffer.");
+			}
+		}
+	}
 
     File File::open(const char* path, const char* mode) {
         SingletonOf<AllegroInit>::instance().setup();
@@ -41,7 +68,7 @@ namespace Utility {
 
 		auto* fpp = al_make_temp_file(name_template, &tmpptr);
 		if (!fpp) 
-            throw FileException("Could not open temp file!");
+            throw Exception::FileException("Could not open temp file!");
 
 		std::string temp_path = al_path_cstr(tmpptr, ALLEGRO_NATIVE_PATH_SEP);
 		al_destroy_path(tmpptr);
@@ -342,140 +369,78 @@ namespace Utility {
 
 	File& File::operator>>(short& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && (std::isdigit(_tmp) || _tmp == '-') && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-#ifdef _WIN32
-			if (sscanf_s(_buf.data(), "%hd", &val) == 1) return *this;
-			val = 0;
-#else
-			if (sscanf(_buf.data(), "%hd", &val) == 1) return *this;
-			val = 0;
-#endif
-		}
+		constexpr char valid_values[] = "0123456789";
+		val = detail::parse_to<short>(*this, valid_values, [](const std::string& s) { return std::stoi(s); });
 		return *this;
 	}
 
 	File& File::operator>>(unsigned short& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && std::isdigit(_tmp) && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-#ifdef _WIN32
-			if (sscanf_s(_buf.data(), "%hu", &val) == 1) return *this;
-			val = 0;
-#else
-			if (sscanf(_buf.data(), "%hu", &val) == 1) return *this;
-			val = 0;
-#endif
-		}
+		constexpr char valid_values[] = "0123456789";
+		val = detail::parse_to<unsigned short>(*this, valid_values, [](const std::string& s) { return std::stoul(s); });
 		return *this;
 	}
 
 	File& File::operator>>(int& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && std::isdigit(_tmp) && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-			val = std::stoi(_buf);
-		}
+		constexpr char valid_values[] = "0123456789";
+		val = detail::parse_to<int>(*this, valid_values, [](const std::string& s) { return std::stoi(s); });
 		return *this;
 	}
 
 	File& File::operator>>(unsigned int& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && std::isdigit(_tmp) && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-#ifdef _WIN32
-			if (sscanf_s(_buf.data(), "%u", &val) == 1) return *this;
-			val = 0;
-#else
-			if (sscanf(_buf.data(), "%u", &val) == 1) return *this;
-			val = 0;
-#endif
-		}
+		constexpr char valid_values[] = "0123456789";
+		val = detail::parse_to<unsigned int>(*this, valid_values, [](const std::string& s) { return std::stoul(s); });
 		return *this;
 	}
 
 	File& File::operator>>(long& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && std::isdigit(_tmp) && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-			val = std::stol(_buf);
-		}
+		constexpr char valid_values[] = "0123456789";
+		val = detail::parse_to<long>(*this, valid_values, [](const std::string& s) { return std::stol(s); });
 		return *this;
 	}
 
 	File& File::operator>>(unsigned long& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && std::isdigit(_tmp) && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-			val = std::stoul(_buf);
-		}
+		constexpr char valid_values[] = "0123456789";
+		val = detail::parse_to<unsigned long>(*this, valid_values, [](const std::string& s) { return std::stoul(s); });
 		return *this;
 	}
 
 	File& File::operator>>(long long& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && std::isdigit(_tmp) && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-			val = std::stoll(_buf);
-		}
+		constexpr char valid_values[] = "0123456789";
+		val = detail::parse_to<long long>(*this, valid_values, [](const std::string& s) { return std::stoll(s); });
 		return *this;
 	}
 
 	File& File::operator>>(unsigned long long& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && std::isdigit(_tmp) && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-			val = std::stoull(_buf);
-		}
+		constexpr char valid_values[] = "0123456789";
+		val = detail::parse_to<unsigned long long>(*this, valid_values, [](const std::string& s) { return std::stoull(s); });
 		return *this;
 	}
 
 	File& File::operator>>(float& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && std::isdigit(_tmp) && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-			val = std::stof(_buf);
-		}
+		constexpr char valid_values[] = "0123456789.";
+		val = detail::parse_to<float>(*this, valid_values, [](const std::string& s) { return std::stof(s); });
 		return *this;
 	}
 
 	File& File::operator>>(double& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && std::isdigit(_tmp) && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-			val = std::stod(_buf);
-		}
+		constexpr char valid_values[] = "0123456789.";
+		val = detail::parse_to<double>(*this, valid_values, [](const std::string& s) { return std::stod(s); });
 		return *this;
 	}
 
 	File& File::operator>>(long double& val)
 	{
-		std::string _buf;
-		for (char _tmp; this->read(&_tmp, sizeof(_tmp)) != 0 && std::isdigit(_tmp) && !this->eof();) _buf += _tmp;
-		if (_buf.empty()) val = 0;
-		else {
-			val = std::stold(_buf);
-		}
+		constexpr char valid_values[] = "0123456789.";
+		val = detail::parse_to<long double>(*this, valid_values, [](const std::string& s) { return std::stold(s); });
 		return *this;
 	}
 
@@ -487,8 +452,7 @@ namespace Utility {
 		return al_fputs(m_file.get(), p);
     }
 
-	std::shared_ptr<ALLEGRO_USTR> File::get_ustr()
-	{
+	std::shared_ptr<ALLEGRO_USTR> File::get_ustr() {
 		return std::shared_ptr<ALLEGRO_USTR>(al_fget_ustr(m_file.get()), [](ALLEGRO_USTR* u) { al_ustr_free(u); });
 	}
 
@@ -502,11 +466,17 @@ namespace Utility {
 
     File::File(ALLEGRO_FILE* file) 
         : m_file(file, al_fclose)
-    {}
+    {
+		if (!m_file)
+			throw Exception::NullException("File was null");
+	}
 
     File::File(ALLEGRO_FILE* file, std::function<void(ALLEGRO_FILE*)> destroyer) 
         : m_file(file, destroyer)
-    {}
+    {
+		if (!m_file)
+			throw Exception::NullException("File was null");
+	}
 	
 } // namespace Utility
 } // namespace LSWE

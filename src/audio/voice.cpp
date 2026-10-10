@@ -2,6 +2,7 @@
 
 #include <LSWE/utility/startup.hpp>
 #include <LSWE/exception/voice_exception.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 
 namespace LSWE {
 namespace Audio {
@@ -50,19 +51,19 @@ namespace Audio {
 
     Voice& Voice::operator<<(ALLEGRO_AUDIO_STREAM* audio_stream) {
         if (!attach(audio_stream)) 
-            throw Utility::VoiceException("Could not attach audio stream to voice!");
+            throw Exception::VoiceException("Could not attach audio stream to voice!");
         return *this;
     }
 
     Voice& Voice::operator<<(ALLEGRO_MIXER* mixer) {
         if (!attach(mixer)) 
-            throw Utility::VoiceException("Could not attach mixer to voice!");
+            throw Exception::VoiceException("Could not attach mixer to voice!");
         return *this;
     }
 
     Voice& Voice::operator<<(ALLEGRO_SAMPLE_INSTANCE* sample_instance) {        
         if (!attach(sample_instance)) 
-            throw Utility::VoiceException("Could not attach sample instance to voice!");
+            throw Exception::VoiceException("Could not attach sample instance to voice!");
         return *this;
     }
 
@@ -100,11 +101,17 @@ namespace Audio {
 
     Voice::Voice(ALLEGRO_VOICE* voice) 
         : m_voice(voice, al_destroy_voice)
-    {}
+    {
+        if (!m_voice)
+            throw Exception::NullException("Voice was null");
+    }
 
     Voice::Voice()
         : m_voice(al_get_default_voice(), [](ALLEGRO_VOICE* v){})
-    {}
+    {
+        if (!m_voice)
+            throw Exception::NullException("Voice was null");
+    }
     
 } // namespace Audio
 } // namespace LSWE

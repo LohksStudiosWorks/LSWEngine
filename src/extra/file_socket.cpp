@@ -21,6 +21,7 @@
 #endif
 
 #include <LSWE/exception/file_exception.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 
 namespace LSWE {
 namespace Utility {
@@ -66,14 +67,16 @@ namespace Utility {
         socket_context *ctx = (socket_context*)al_get_file_userdata(m_file.get());
 
         if (ctx->original_type != FileSocket::connection_type::TCP_LISTEN)
-            throw FileException("Tried accept on a non TCP Listen socket file!");
+            throw Exception::FileException("Tried accept on a non TCP Listen socket file!");
 
-        socket_context *client_ctx = new socket_context();
+        socket_context *client_ctx = new(std::nothrow) socket_context();
+        if (!client_ctx)
+            throw Exception::NullException("Failed to allocate client context");
 
 
         if (!this->File::read((char*)client_ctx, sizeof(socket_context))) {
             delete client_ctx;
-            throw FileException("Failed to accept new socket client");
+            throw Exception::FileException("Failed to accept new socket client");
         }
 
         return FileSocket(al_create_file_handle(al_get_socket_file_interface(), client_ctx));
@@ -106,7 +109,9 @@ namespace Utility {
             const uint16_t port = scfg->port;
             if (scfg->host) snprintf(host, sizeof(host), "%s", scfg->host);
 
-            socket_context *ctx = new socket_context();
+            socket_context *ctx = new(std::nothrow) socket_context();
+            if (!ctx) 
+                throw Exception::NullException("Failed to allocate socket context");
 
             struct addrinfo *info = resolve_address(host, port, type);
             if (!info) {

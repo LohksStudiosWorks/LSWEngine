@@ -1,6 +1,7 @@
 #include <LSWE/audio/sample.hpp>
 
 #include <LSWE/utility/startup.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 
 namespace LSWE {
 namespace Audio {
@@ -75,7 +76,10 @@ namespace Audio {
 
     Sample::Sample(ALLEGRO_SAMPLE* sample)
         : m_sample(sample, al_destroy_sample)
-    {}
+    {
+        if (!m_sample)
+            throw Exception::NullException("Sample was null");
+    }
     
 } // namespace Audio
 } // namespace LSWE

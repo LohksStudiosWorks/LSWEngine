@@ -1,9 +1,9 @@
-#include <LSWE/exception/file_exception.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 
 namespace LSWE {
 namespace Exception {
 
-    FileException::FileException(const char* message) noexcept 
+    NullException::NullException(const char* message) noexcept 
         : std::runtime_error(message)
     {}
 

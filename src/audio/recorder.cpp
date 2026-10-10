@@ -1,6 +1,7 @@
 #include <LSWE/audio/recorder.hpp>
 
 #include <LSWE/utility/startup.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 
 namespace LSWE {
 namespace Audio {
@@ -46,7 +47,10 @@ namespace Audio {
 
     Recorder::Recorder(ALLEGRO_AUDIO_RECORDER* recorder)
         : m_recorder(recorder, al_destroy_audio_recorder)
-    {}
+    {
+        if (!m_recorder)
+            throw Exception::NullException("Recorder was null");
+    }
     
 } // namespace Audio
 } // namespace LSWE
