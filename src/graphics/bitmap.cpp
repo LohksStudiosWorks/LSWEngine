@@ -2,11 +2,10 @@
 
 #include <LSWE/utility/startup.hpp>
 #include <LSWE/exception/bitmap_exception.hpp>
+#include <LSWE/utility/make_temporary_target.hpp>
 
 namespace LSWE {
 namespace Graphics {
-
-    thread_local ALLEGRO_BITMAP* Bitmap::last_target = nullptr;
 
     Bitmap Bitmap::create(int width, int height) {
         Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
@@ -89,37 +88,37 @@ namespace Graphics {
     }
 
     void Bitmap::draw_pixel(float x, float y, ALLEGRO_COLOR color) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_draw_pixel(x, y, color);
     }
 
     void Bitmap::put_pixel(int x, int y, ALLEGRO_COLOR color) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_put_pixel(x, y, color);
     }
 
     void Bitmap::put_blended_pixel(int x, int y, ALLEGRO_COLOR color) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_put_blended_pixel(x, y, color);
     }
 
     void Bitmap::clear(ALLEGRO_COLOR color) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_clear_to_color(color);
     }
 
     void Bitmap::get_clipping_rectangle(int& x, int& y, int& w, int& h) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_get_clipping_rectangle(&x, &y, &w, &h);
     }
 
     void Bitmap::set_clipping_rectangle(int x, int y, int w, int h) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_set_clipping_rectangle(x, y, w, h);
     }
 
     void Bitmap::reset_clipping_rectangle() {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_reset_clipping_rectangle();
     }
 
@@ -185,37 +184,37 @@ namespace Graphics {
     }
 
     void Bitmap::get_blender(int& op, int& src, int& dst) const {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         return al_get_bitmap_blender(&op, &src, &dst);
     }
 
     void Bitmap::get_blender(int& op, int& src, int& dst, int& alpha_op, int& alpha_src, int& alpha_dst) const {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         return al_get_separate_bitmap_blender(&op, &src, &dst, &alpha_op, &alpha_src, &alpha_dst);
     }
 
     ALLEGRO_COLOR Bitmap::get_blend_color() const {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         return al_get_bitmap_blend_color();
     }
 
     void Bitmap::set_blender(int op, int src, int dst) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_set_bitmap_blender(op, src, dst);
     }
 
     void Bitmap::set_blender(int op, int src, int dst, int alpha_op, int alpha_src, int alpha_dst) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_set_separate_bitmap_blender(op, src, dst, alpha_op, alpha_src, alpha_dst);
     }
 
     void Bitmap::set_blend_color(ALLEGRO_COLOR color) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_set_bitmap_blend_color(color);
     }
 
     void Bitmap::reset_blend() {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_bitmap.get());
         al_reset_bitmap_blender();
     }
 
@@ -279,7 +278,7 @@ namespace Graphics {
     }
 
     void Bitmap::set_as_target() {
-        ensure_target_is_this();
+        al_set_target_bitmap(m_bitmap.get());
     }
 
     Bitmap::operator ALLEGRO_BITMAP*() const {
@@ -297,14 +296,6 @@ namespace Graphics {
     Bitmap::Bitmap(std::shared_ptr<ALLEGRO_BITMAP> bitmap_ref)
         : m_bitmap(bitmap_ref), m_parent({})
     {}
-
-    void Bitmap::ensure_target_is_this() const {
-        ALLEGRO_BITMAP* self = m_bitmap.get();        
-        if (last_target != self) {
-            al_set_target_bitmap(self);
-            last_target = self;
-        }
-    }
 
     void Bitmap::assert_not_self_target() const {
         if (al_get_target_bitmap() == m_bitmap.get())

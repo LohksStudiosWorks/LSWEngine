@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
     if (!tcp_test()) return 1;
     if (!udp_test()) return 1;
 
+    std::cout << "PASSED!" << std::endl;
     return 0;
 }
 

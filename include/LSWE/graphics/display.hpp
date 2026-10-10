@@ -99,12 +99,8 @@ namespace Graphics {
     private:
         Display(ALLEGRO_DISPLAY* display);
 
-        void ensure_target_is_this() const;
-
         std::shared_ptr<ALLEGRO_DISPLAY> m_display;
         Bitmap m_backbuffer;
-
-        static thread_local ALLEGRO_DISPLAY *last_target;
     };
 
     

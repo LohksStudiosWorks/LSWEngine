@@ -15,14 +15,12 @@ namespace Audio {
         static SampleInstance create(const Sample& sample);
         void destroy();
 
-        bool play();
-        bool stop();
-
         unsigned get_frequency() const;
         ALLEGRO_CHANNEL_CONF get_channels() const;
         ALLEGRO_AUDIO_DEPTH get_depth() const;
         unsigned get_length() const;
         unsigned get_position() const;
+        float get_position_seconds() const;
         float get_speed() const;
         float get_gain() const;
         float get_pan() const;
@@ -37,7 +35,7 @@ namespace Audio {
         bool set_gain(float val);
         bool set_pan(float val);
         bool set_playmode(ALLEGRO_PLAYMODE val);
-        bool set_playing(bool val);
+        bool set_playing(bool val, bool reset_position_to_zero = false);
         
         bool detach();
         

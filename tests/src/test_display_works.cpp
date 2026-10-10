@@ -13,6 +13,7 @@ int main(int argc, char *argv[]) {
 
     auto fp = Utility::File::open_mem((void*)jpg_embedded.data(), jpg_embedded.length(), "rb");
 
+    Graphics::Display::set_new_window_title("Fancy test");
     auto display = Graphics::Display::create(1280, 720);
     auto bitmap = Graphics::Bitmap::load(fp, ".jpg");
 
@@ -23,7 +24,8 @@ int main(int argc, char *argv[]) {
     
     display.flip();
 
-    al_rest(10.0);    
+    al_rest(1.0);    
 
+    std::cout << "PASSED!" << std::endl;
     return 0;
 }

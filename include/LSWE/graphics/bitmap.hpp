@@ -96,14 +96,12 @@ namespace Graphics {
         Bitmap(ALLEGRO_BITMAP* bitmap, bool is_ref, std::shared_ptr<ALLEGRO_BITMAP> parent);
         Bitmap(std::shared_ptr<ALLEGRO_BITMAP> bitmap_ref);
 
-        void ensure_target_is_this() const;
         void assert_not_self_target() const;
 
         friend class SubBitmap;
         friend class Display;
 
         std::shared_ptr<ALLEGRO_BITMAP> m_bitmap, m_parent;
-        static thread_local ALLEGRO_BITMAP *last_target;
     };
 
     class SubBitmap : public Bitmap {

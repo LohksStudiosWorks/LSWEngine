@@ -13,14 +13,6 @@ namespace Audio {
         m_instance.reset();
     }
 
-    bool SampleInstance::play() {
-        return al_play_sample_instance(m_instance.get());
-    }
-
-    bool SampleInstance::stop() {
-        return al_stop_sample_instance(m_instance.get());
-    }
-
     unsigned SampleInstance::get_frequency() const {
         return al_get_sample_instance_frequency(m_instance.get());
     }
@@ -39,6 +31,10 @@ namespace Audio {
 
     unsigned SampleInstance::get_position() const {
         return al_get_sample_instance_position(m_instance.get());
+    }
+
+    float SampleInstance::get_position_seconds() const {
+        return get_position() * 1.0f / get_frequency();
     }
 
     float SampleInstance::get_speed() const {
@@ -93,8 +89,12 @@ namespace Audio {
         return al_set_sample_instance_playmode(m_instance.get(), val);
     }
 
-    bool SampleInstance::set_playing(bool val) {
-        return al_set_sample_instance_playing(m_instance.get(), val);
+    bool SampleInstance::set_playing(bool val, bool reset_position_to_zero) {
+        // workaround because default Allegro behavior is to stop and reset if val is false, instead of just pausing it
+        unsigned last_pos = get_position();
+        const bool res = al_set_sample_instance_playing(m_instance.get(), val);
+        if (!reset_position_to_zero) set_position(last_pos);
+        return res;
     }
 
     bool SampleInstance::detach() {

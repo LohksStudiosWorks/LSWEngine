@@ -16,5 +16,6 @@ int main() {
 
     al_destroy_display(display);
 
+    std::cout << "PASSED!" << std::endl;
     return 0;
 }

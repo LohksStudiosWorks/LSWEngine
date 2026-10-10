@@ -1,19 +1,17 @@
 #include <LSWE/graphics/display.hpp>
 
 #include <LSWE/utility/startup.hpp>
+#include <LSWE/utility/make_temporary_target.hpp>
 //#include <LSWE/exception/bitmap_exception.hpp>
 
 namespace LSWE {
 namespace Graphics {
-
-    thread_local ALLEGRO_DISPLAY* Display::last_target = nullptr;
 
     Display Display::create(int w, int h) {
         Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
 
         return Display(al_create_display(w, h));
     }
-
 
     void Display::convert_memory_bitmaps() {
         al_convert_memory_bitmaps();
@@ -68,7 +66,7 @@ namespace Graphics {
     }    
 
     void Display::clear_depth_buffer(float z) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         al_clear_depth_buffer(z);
     }
 
@@ -183,47 +181,47 @@ namespace Graphics {
     }
 
     ALLEGRO_COLOR Display::get_blend_color() {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         return al_get_blend_color();
     }
 
     void Display::get_blender(int& op, int& src, int& dst) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         return al_get_blender(&op, &src, &dst);
     }
 
     void Display::get_blender(int& op, int& src, int& dst, int& alpha_op, int& alpha_src, int& alpha_dst) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         al_get_separate_blender(&op, &src, &dst, &alpha_op, &alpha_src, &alpha_dst);
     }
 
     void Display::set_blender(int op, int src, int dst) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         al_set_blender(op, src, dst);
     }
 
     void Display::set_blender(int op, int src, int dst, int alpha_op, int alpha_src, int alpha_dst) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         al_set_separate_blender(op, src, dst, alpha_op, alpha_src, alpha_dst);
     }
 
     void Display::set_blend_color(ALLEGRO_COLOR color) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         al_set_blend_color(color);
     }
 
     int Display::get_render_state(ALLEGRO_RENDER_STATE state) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         return al_get_render_state(state);
     }
 
     void Display::set_render_state(ALLEGRO_RENDER_STATE state, int value) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         al_set_render_state(state, value);
     }
 
     void Display::set_as_target() {
-        ensure_target_is_this();
+        al_set_target_bitmap(m_backbuffer);
     }
 
     Bitmap Display::get_backbuffer() {
@@ -231,17 +229,17 @@ namespace Graphics {
     }
 
     void Display::flip() {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         al_flip_display();
     }
 
     void Display::flip_region(int x, int y, int w, int h) {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         al_update_display_region(x, y, w, h);
     }
 
     bool Display::wait_for_vsync() {
-        ensure_target_is_this();
+        Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         return al_wait_for_vsync();
     }
     
@@ -269,14 +267,6 @@ namespace Graphics {
     Display::Display(ALLEGRO_DISPLAY* display)
         : m_display(display, al_destroy_display), m_backbuffer(al_get_backbuffer(m_display.get()), true, {})
     {}
-
-    void Display::ensure_target_is_this() const {
-        ALLEGRO_DISPLAY* self = m_display.get();        
-        if (last_target != self) {
-            al_set_target_backbuffer(self);
-            last_target = self;
-        }
-    }
     
 } // namespace Graphics
 } // namespace LSWE
