@@ -46,7 +46,7 @@ foreach(test_src ${TEST_SOURCES})
     endif()
 
     if(test_name IN_LIST FONT_TEST_LIST)
-        b_embed(${test_name} "resources/calibri.ttf")
+        b_embed(${test_name} "resources/calibri_fix.ttf")
     endif()
 
     add_test(NAME ${test_name} COMMAND ${test_name} ${TARGET_PLATFORM})

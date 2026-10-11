@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     const std::string platform = (argc > 1) ? argv[1] : "Linux";
     std::cout << "Running test on " << platform << "..." << std::endl;
 
-    const auto font_embedded = b::embed<"resources/calibri.ttf">();
+    const auto font_embedded = b::embed<"resources/calibri_fix.ttf">();
 
     //auto fp = Utility::File::open_mem((void*)font_embedded.data(), font_embedded.length(), "rb");
 
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     auto display = Graphics::Display::create(1280, 720);
 
     ALLEGRO_FILE* fp = al_open_memfile((void*)font_embedded.data(), font_embedded.length(), "rb");
-    ALLEGRO_FONT* font = al_load_ttf_font_f(fp, "resources/calibri.ttf", 96, 0);
+    ALLEGRO_FONT* font = al_load_ttf_font_f(fp, "resources/calibri_fix.ttf", 96, 0);
 
 
     //auto font = Graphics::Font::load_ttf(fp, 24);
