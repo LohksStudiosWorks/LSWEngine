@@ -45,12 +45,15 @@ namespace Graphics {
         return Font(al_load_ttf_font(filename, size, flags));
     }
 
-    Font Font::load_ttf(Utility::File file, int size, int flags) {
+    Font Font::load_ttf(Utility::File&& file, int size, int flags) {
         Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
         Utility::SingletonOf<Utility::AllegroInitFont>::instance().setup();
         Utility::SingletonOf<Utility::AllegroInitTTF>::instance().setup();
 
-        return Font(al_load_ttf_font_f(file, file.get_path().c_str(), size, flags), file);
+        const std::string file_path = file.get_path();
+        ALLEGRO_FILE* released = file.release();
+
+        return Font(al_load_ttf_font_f(released, file_path.c_str(), size, flags));
     }
 
     Font Font::load_ttf_stretch(const char* filename, int w, int h, int flags) {
@@ -61,12 +64,15 @@ namespace Graphics {
         return Font(al_load_ttf_font_stretch(filename, w, h, flags));
     }
 
-    Font Font::load_ttf_stretch(Utility::File file, int w, int h, int flags) {
+    Font Font::load_ttf_stretch(Utility::File&& file, int w, int h, int flags) {
         Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
         Utility::SingletonOf<Utility::AllegroInitFont>::instance().setup();
         Utility::SingletonOf<Utility::AllegroInitTTF>::instance().setup();
 
-        return Font(al_load_ttf_font_stretch_f(file, file.get_path().c_str(), w, h, flags), file);
+        const std::string file_path = file.get_path();
+        ALLEGRO_FILE* released = file.release();
+
+        return Font(al_load_ttf_font_stretch_f(released, file_path.c_str(), w, h, flags));
     }
 
     Font Font::load_from_bitmap(const char* filename, int flags) {
@@ -224,17 +230,10 @@ namespace Graphics {
     }
 
     Font::Font(ALLEGRO_FONT* font)
-        : m_font(font, al_destroy_font), m_fallback(nullptr), m_file_ref({})
+        : m_font(font, al_destroy_font), m_fallback(nullptr)
     {
         if (!m_font)
             throw Exception::NullException("Font was null");
-    }
-
-    Font::Font(ALLEGRO_FONT* font, Utility::File file)
-        : m_font(font, al_destroy_font), m_fallback(nullptr), m_file_ref(file)
-    {
-        if (!m_font || !m_file_ref.has_value())
-            throw Exception::NullException("Font was null or file source of font was null");
     }
     
 } // namespace Graphics

@@ -13,27 +13,27 @@ int main(int argc, char *argv[]) {
 
     const auto font_embedded = b::embed<"resources/calibri_fix.ttf">();
 
-    //auto fp = Utility::File::open_mem((void*)font_embedded.data(), font_embedded.length(), "rb");
+    auto fp = Utility::File::open_mem((void*)font_embedded.data(), font_embedded.length(), "rb");
 
 
-    Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
-    Utility::SingletonOf<Utility::AllegroInitFont>::instance().setup();
-    Utility::SingletonOf<Utility::AllegroInitTTF>::instance().setup();
+    //Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+    //Utility::SingletonOf<Utility::AllegroInitFont>::instance().setup();
+    //Utility::SingletonOf<Utility::AllegroInitTTF>::instance().setup();
 
     Graphics::Display::set_new_window_title("Fancy test");
     auto display = Graphics::Display::create(1280, 720);
 
-    ALLEGRO_FILE* fp = al_open_memfile((void*)font_embedded.data(), font_embedded.length(), "rb");
-    ALLEGRO_FONT* font = al_load_ttf_font_f(fp, "resources/calibri_fix.ttf", 96, 0);
+    //ALLEGRO_FILE* fp = al_open_memfile((void*)font_embedded.data(), font_embedded.length(), "rb");
+    //ALLEGRO_FONT* font = al_load_ttf_font_f(fp, "resources/calibri_fix.ttf", 96, 0);
 
 
-    //auto font = Graphics::Font::load_ttf(fp, 24);
+    auto font = Graphics::Font::load_ttf(std::move(fp), 24);
 
     display->clear(al_map_rgb(50, 50, 50));
 
-    al_draw_text(font, al_map_rgb(255,255,255), 10, 10, 0, "Hello world");
+    //al_draw_text(font, al_map_rgb(255,255,255), 10, 10, 0, "Hello world");
 
-    //font.draw(al_map_rgb(255,255,255), 0, 0, 0, "Hello world");
+    font.draw(al_map_rgb(255,255,255), 0, 0, 0, "Hello world");
     
     display.flip();
 

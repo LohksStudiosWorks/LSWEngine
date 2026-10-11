@@ -153,8 +153,7 @@ namespace Utility {
         return al_fputc(m_file.get(), c);
     }
 
-	int File::printformat(const char* format, ...)
-	{
+	int File::printformat(const char* format, ...) {
 		va_list args;
 		va_start(args, format);
 		auto ret = al_vfprintf(m_file.get(), format, args);
@@ -162,155 +161,130 @@ namespace Utility {
 		return ret;
 	}
 
-	int File::vprintformat(const char* format, va_list args)
-	{
+	int File::vprintformat(const char* format, va_list args) {
 		return al_vfprintf(m_file.get(), format, args);
 	}
 
-	int16_t File::read16le()
-	{
+	int16_t File::read16le() {
 		return al_fread16le(m_file.get());
 	}
 
-	int16_t File::read16be()
-	{
+	int16_t File::read16be() {
 		return al_fread16be(m_file.get());
 	}
 
-	size_t File::write16le(int16_t c)
-	{
+	size_t File::write16le(int16_t c) {
 		return al_fwrite16le(m_file.get(), c);
 	}
 
-	size_t File::write16be(int16_t c)
-	{
+	size_t File::write16be(int16_t c) {
 		return al_fwrite16le(m_file.get(), c);
 	}
 
-	int32_t File::read32le()
-	{
+	int32_t File::read32le() {
 		return al_fread32le(m_file.get());
 	}
 
-	int32_t File::read32be()
-	{
+	int32_t File::read32be() {
 		return al_fread32be(m_file.get());
 	}
 
-	size_t File::write32le(int32_t c)
-	{
+	size_t File::write32le(int32_t c) {
 		return al_fwrite32le(m_file.get(), c);
 	}
 
-	size_t File::write32be(int32_t c)
-	{
+	size_t File::write32be(int32_t c) {
 		return al_fwrite32le(m_file.get(), c);
 	}
 
-	File& File::operator<<(const char* val)
-	{
+	File& File::operator<<(const char* val) {
 		this->write(val, strlen(val));
 		return *this;
 	}
 
-	File& File::operator<<(const std::string& val)
-	{
+	File& File::operator<<(const std::string& val) {
 		this->write(val.data(), val.size());
 		return *this;
 	}
 
-	File& File::operator<<(const std::vector<char>& val)
-	{
+	File& File::operator<<(const std::vector<char>& val) {
 		this->write(val.data(), val.size());
 		return *this;
 	}
 
-	File& File::operator<<(bool val)
-	{
+	File& File::operator<<(bool val) {
 		const std::string str = (val ? "1" : "0");
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(short val)
-	{
+	File& File::operator<<(short val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(unsigned short val)
-	{
+	File& File::operator<<(unsigned short val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(int val)
-	{
+	File& File::operator<<(int val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(unsigned int val)
-	{
+	File& File::operator<<(unsigned int val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(long val)
-	{
+	File& File::operator<<(long val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(unsigned long val)
-	{
+	File& File::operator<<(unsigned long val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(long long val)
-	{
+	File& File::operator<<(long long val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(unsigned long long val)
-	{
+	File& File::operator<<(unsigned long long val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(float val)
-	{
+	File& File::operator<<(float val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(double val)
-	{
+	File& File::operator<<(double val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(long double val)
-	{
+	File& File::operator<<(long double val) {
 		const auto str = std::to_string(val);
 		this->write(str.data(), str.size());
 		return *this;
 	}
 
-	File& File::operator<<(std::streambuf* sb)
-	{	
+	File& File::operator<<(std::streambuf* sb) {	
 		std::stringstream ss;
 		ss << sb;
 		const auto str = ss.str();
@@ -318,8 +292,7 @@ namespace Utility {
 		return *this;
 	}
 
-	File& File::operator<<(std::ostream& (*pf)(std::ostream&))
-	{
+	File& File::operator<<(std::ostream& (*pf)(std::ostream&)) {
 		std::stringstream ss;
 		ss << pf;
 		const auto str = ss.str();
@@ -327,8 +300,7 @@ namespace Utility {
 		return *this;
 	}
 
-	File& File::operator<<(std::ios& (*pf)(std::ios&))
-	{
+	File& File::operator<<(std::ios& (*pf)(std::ios&)) {
 		std::stringstream ss;
 		ss << pf;
 		const auto str = ss.str();
@@ -336,8 +308,7 @@ namespace Utility {
 		return *this;
 	}
 
-	File& File::operator<<(std::ios_base& (*pf)(std::ios_base&))
-	{
+	File& File::operator<<(std::ios_base& (*pf)(std::ios_base&)) {
 		std::stringstream ss;
 		ss << pf;
 		const auto str = ss.str();
@@ -345,8 +316,7 @@ namespace Utility {
 		return *this;
 	}
 
-	File& File::operator>>(std::string& val)
-	{
+	File& File::operator>>(std::string& val) {
         constexpr size_t max = static_cast<size_t>(1) << 12;
 		val = std::string(max, '\0');
 		al_fgets(m_file.get(), val.data(), val.size());
@@ -356,93 +326,80 @@ namespace Utility {
 		return *this;
 	}
 
-	File& File::operator>>(std::vector<char>& val)
-	{
+	File& File::operator>>(std::vector<char>& val) {
 		std::string tmp;
         *this >> tmp;
 		val.assign(std::move_iterator(tmp.begin()), std::move_iterator(tmp.end()));
 		return *this;
 	}
 
-	File& File::operator>>(bool& val)
-	{
+	File& File::operator>>(bool& val) {
 		char _tmp{};
 		val = (this->read(&_tmp, sizeof(_tmp)) == 0) ? false : (_tmp == '1');
 		return *this;
 	}
 
-	File& File::operator>>(short& val)
-	{
+	File& File::operator>>(short& val) {
 		constexpr char valid_values[] = "0123456789";
 		val = detail::parse_to<short>(*this, valid_values, [](const std::string& s) { return std::stoi(s); });
 		return *this;
 	}
 
-	File& File::operator>>(unsigned short& val)
-	{
+	File& File::operator>>(unsigned short& val) {
 		constexpr char valid_values[] = "0123456789";
 		val = detail::parse_to<unsigned short>(*this, valid_values, [](const std::string& s) { return std::stoul(s); });
 		return *this;
 	}
 
-	File& File::operator>>(int& val)
-	{
+	File& File::operator>>(int& val) {
 		constexpr char valid_values[] = "0123456789";
 		val = detail::parse_to<int>(*this, valid_values, [](const std::string& s) { return std::stoi(s); });
 		return *this;
 	}
 
-	File& File::operator>>(unsigned int& val)
-	{
+	File& File::operator>>(unsigned int& val) {
 		constexpr char valid_values[] = "0123456789";
 		val = detail::parse_to<unsigned int>(*this, valid_values, [](const std::string& s) { return std::stoul(s); });
 		return *this;
 	}
 
-	File& File::operator>>(long& val)
-	{
+	File& File::operator>>(long& val) {
 		constexpr char valid_values[] = "0123456789";
 		val = detail::parse_to<long>(*this, valid_values, [](const std::string& s) { return std::stol(s); });
 		return *this;
 	}
 
-	File& File::operator>>(unsigned long& val)
-	{
+	File& File::operator>>(unsigned long& val) {
 		constexpr char valid_values[] = "0123456789";
 		val = detail::parse_to<unsigned long>(*this, valid_values, [](const std::string& s) { return std::stoul(s); });
 		return *this;
 	}
 
-	File& File::operator>>(long long& val)
-	{
+	File& File::operator>>(long long& val) {
 		constexpr char valid_values[] = "0123456789";
 		val = detail::parse_to<long long>(*this, valid_values, [](const std::string& s) { return std::stoll(s); });
 		return *this;
 	}
 
-	File& File::operator>>(unsigned long long& val)
-	{
+	File& File::operator>>(unsigned long long& val) {
 		constexpr char valid_values[] = "0123456789";
 		val = detail::parse_to<unsigned long long>(*this, valid_values, [](const std::string& s) { return std::stoull(s); });
 		return *this;
 	}
 
-	File& File::operator>>(float& val)
-	{
+	File& File::operator>>(float& val) {
 		constexpr char valid_values[] = "0123456789.";
 		val = detail::parse_to<float>(*this, valid_values, [](const std::string& s) { return std::stof(s); });
 		return *this;
 	}
 
-	File& File::operator>>(double& val)
-	{
+	File& File::operator>>(double& val) {
 		constexpr char valid_values[] = "0123456789.";
 		val = detail::parse_to<double>(*this, valid_values, [](const std::string& s) { return std::stod(s); });
 		return *this;
 	}
 
-	File& File::operator>>(long double& val)
-	{
+	File& File::operator>>(long double& val) {
 		constexpr char valid_values[] = "0123456789.";
 		val = detail::parse_to<long double>(*this, valid_values, [](const std::string& s) { return std::stold(s); });
 		return *this;
@@ -463,6 +420,10 @@ namespace Utility {
     int64_t File::size() const {
         return al_fsize(m_file.get());
     }
+
+	ALLEGRO_FILE* File::release() {
+		return m_file.release();
+	}
 
     File::operator ALLEGRO_FILE*() const {
         return m_file.get();

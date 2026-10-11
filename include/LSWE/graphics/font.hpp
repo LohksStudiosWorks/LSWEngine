@@ -5,7 +5,6 @@
 
 #include <memory>
 #include <span>
-#include <optional>
 
 #include <LSWE/utility/file.hpp>
 
@@ -18,9 +17,9 @@ namespace Graphics {
 
         static Font load(const char* filename, int size, int flags = 0);
         static Font load_ttf(const char* filename, int size, int flags = 0);
-        static Font load_ttf(Utility::File file, int size, int flags = 0);
+        static Font load_ttf(Utility::File&& file, int size, int flags = 0);
         static Font load_ttf_stretch(const char* filename, int w, int h, int flags = 0);
-        static Font load_ttf_stretch(Utility::File file, int w, int h, int flags = 0);
+        static Font load_ttf_stretch(Utility::File&& file, int w, int h, int flags = 0);
         static Font load_from_bitmap(const char* filename, int flags = 0);
         static Font create_builtin();
         static Font grab_from_bitmap(ALLEGRO_BITMAP* to_copy, int ranges_n, const int ranges[]);
@@ -57,10 +56,8 @@ namespace Graphics {
         int get_glyph_advance(int codepoint1, int codepoint2) const;
     private:
         Font(ALLEGRO_FONT* font);
-        Font(ALLEGRO_FONT* font, Utility::File file);
 
         std::shared_ptr<ALLEGRO_FONT> m_font, m_fallback;
-        std::optional<Utility::File> m_file_ref;
     };
     
 } // namespace Graphics

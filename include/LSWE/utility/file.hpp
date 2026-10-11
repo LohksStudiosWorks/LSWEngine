@@ -7,6 +7,8 @@
 #include <vector>
 #include <functional>
 
+#include <LSWE/utility/shared_unique_memory.hpp>
+
 namespace LSWE {
 namespace Utility {
 
@@ -97,12 +99,14 @@ namespace Utility {
 
         int64_t size() const;
 
+        ALLEGRO_FILE* release();
+
         operator ALLEGRO_FILE*() const;
     protected:
         File(std::string path, ALLEGRO_FILE* file);
         File(std::string path, ALLEGRO_FILE* file, std::function<void(ALLEGRO_FILE*)> destroyer);
 
-        std::shared_ptr<ALLEGRO_FILE> m_file;
+        Utility::SharedUniquePtr<ALLEGRO_FILE> m_file;
         std::string m_path;
     };
 
