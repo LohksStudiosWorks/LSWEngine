@@ -40,25 +40,25 @@ namespace Utility {
     File File::open(const char* path, const char* mode) {
         SingletonOf<AllegroInit>::instance().setup();
 
-        return File(al_fopen(path, mode));
+        return File(path, al_fopen(path, mode));
     }
 
     File File::open_interface(const ALLEGRO_FILE_INTERFACE *drv, const char *path, const char *mode) {
         SingletonOf<AllegroInit>::instance().setup();
 
-        return File(al_fopen_interface(drv, path, mode));
+        return File(path, al_fopen_interface(drv, path, mode));
     }
 
     File File::open_slice(File& oth, size_t initial_size, const char* mode) {
         SingletonOf<AllegroInit>::instance().setup();
 
-        return File(al_fopen_slice(oth.m_file.get(), initial_size, mode));
+        return File(oth.m_path, al_fopen_slice(oth.m_file.get(), initial_size, mode));
     }
 
     File File::open_fd(int fd, const char* mode) {
         SingletonOf<AllegroInit>::instance().setup();
 
-        return File(al_fopen_fd(fd, mode));
+        return File("", al_fopen_fd(fd, mode));
     }
 
     File File::make_temp(const char* name_template, const char* mode) {
@@ -74,7 +74,7 @@ namespace Utility {
 		al_destroy_path(tmpptr);
 		al_fclose(fpp);
 
-        return File(al_fopen(temp_path.c_str(), mode), [temp_path](ALLEGRO_FILE* fp) {
+        return File(temp_path, al_fopen(temp_path.c_str(), mode), [temp_path](ALLEGRO_FILE* fp) {
             al_fclose(fp);
             if (temp_path.empty()) return;
             std::remove(temp_path.c_str());
@@ -84,7 +84,7 @@ namespace Utility {
     File File::open_mem(void* data, size_t len, const char* mode) {
         SingletonOf<AllegroInit>::instance().setup();
 
-        return File(al_open_memfile(data, len, mode));
+        return File("", al_open_memfile(data, len, mode));
     }
 
     File File::make_memory(size_t mem_len) {
@@ -92,10 +92,14 @@ namespace Utility {
 
         auto mem = std::shared_ptr<char[]>(new char[mem_len]);
 
-        return File(al_open_memfile(mem.get(), mem_len, "wb"), [mem](ALLEGRO_FILE* fp) {
+        return File("", al_open_memfile(mem.get(), mem_len, "wb"), [mem](ALLEGRO_FILE* fp) {
             al_fclose(fp);
         });
     }
+
+	std::string File::get_path() const {
+		return m_path;
+	}
 
     void File::close() {
         m_file.reset();
@@ -464,15 +468,15 @@ namespace Utility {
         return m_file.get();
     }
 
-    File::File(ALLEGRO_FILE* file) 
-        : m_file(file, al_fclose)
+    File::File(std::string path, ALLEGRO_FILE* file) 
+        : m_file(file, al_fclose), m_path(std::move(path))
     {
 		if (!m_file)
 			throw Exception::NullException("File was null");
 	}
 
-    File::File(ALLEGRO_FILE* file, std::function<void(ALLEGRO_FILE*)> destroyer) 
-        : m_file(file, destroyer)
+    File::File(std::string path, ALLEGRO_FILE* file, std::function<void(ALLEGRO_FILE*)> destroyer) 
+        : m_file(file, destroyer), m_path(std::move(path))
     {
 		if (!m_file)
 			throw Exception::NullException("File was null");

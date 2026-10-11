@@ -2,7 +2,7 @@
 
 #include <LSWE/utility/startup.hpp>
 #include <LSWE/utility/make_temporary_target.hpp>
-//#include <LSWE/exception/bitmap_exception.hpp>
+#include <LSWE/exception/general_null_exception.hpp>
 
 namespace LSWE {
 namespace Graphics {
@@ -266,7 +266,10 @@ namespace Graphics {
     
     Display::Display(ALLEGRO_DISPLAY* display)
         : m_display(display, al_destroy_display), m_backbuffer(al_get_backbuffer(m_display.get()), true, {})
-    {}
+    {
+        if (!m_display)
+            throw Exception::NullException("Display was null");
+    }
     
 } // namespace Graphics
 } // namespace LSWE

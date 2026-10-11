@@ -60,7 +60,7 @@ namespace Utility {
         const ALLEGRO_FILE_INTERFACE* interface = al_get_socket_file_interface();
         const size_t cfg_len = sizeof(cfg);
 
-        return FileSocket(al_fopen_interface(interface, (char*)&cfg, (char*)&cfg_len));
+        return FileSocket(uri, al_fopen_interface(interface, (char*)&cfg, (char*)&cfg_len));
     }
 
     FileSocket FileSocket::accept() {
@@ -79,11 +79,11 @@ namespace Utility {
             throw Exception::FileException("Failed to accept new socket client");
         }
 
-        return FileSocket(al_create_file_handle(al_get_socket_file_interface(), client_ctx));
+        return FileSocket(get_path(), al_create_file_handle(al_get_socket_file_interface(), client_ctx));
     }
 
-    FileSocket::FileSocket(ALLEGRO_FILE* file)
-        : File::File(file)
+    FileSocket::FileSocket(std::string uri, ALLEGRO_FILE* file)
+        : File::File(std::move(uri), file)
     {}
 
     namespace detail {

@@ -1,7 +1,6 @@
 #include <LSWE/lswe.hpp>
 #include <iostream>
 #include <cstdint>
-#include <battery/embed.hpp>
 #include <future>
 
 using namespace LSWE;

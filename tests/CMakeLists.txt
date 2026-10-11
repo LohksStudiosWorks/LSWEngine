@@ -13,6 +13,19 @@ else()
     set(TARGET_PLATFORM ${CMAKE_SYSTEM_NAME})
 endif()
 
+set(OGG_TEST_LIST
+    test_audio_music_playback
+)
+
+set(JPG_TEST_LIST
+    test_display_works
+)
+
+set(FONT_TEST_LIST
+    test_font_works
+)
+
+
 foreach(test_src ${TEST_SOURCES})
     get_filename_component(test_name ${test_src} NAME_WE)
 
@@ -23,9 +36,18 @@ foreach(test_src ${TEST_SOURCES})
     target_link_libraries(${test_name} PRIVATE lswe::lsw-engine)
     
     target_compile_definitions(${test_name} PRIVATE LSWE_DEBUG)
+    
+    if(test_name IN_LIST OGG_TEST_LIST)
+        b_embed(${test_name} "resources/7. Continuity.ogg")
+    endif()
 
-    b_embed(${test_name} "resources/7. Continuity.ogg")
-    b_embed(${test_name} "resources/vrchat_ex.jpg")
+    if(test_name IN_LIST JPG_TEST_LIST)
+        b_embed(${test_name} "resources/vrchat_ex.jpg")
+    endif()
+
+    if(test_name IN_LIST FONT_TEST_LIST)
+        b_embed(${test_name} "resources/calibri.ttf")
+    endif()
 
     add_test(NAME ${test_name} COMMAND ${test_name} ${TARGET_PLATFORM})
 endforeach()

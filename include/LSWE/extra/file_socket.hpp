@@ -46,7 +46,7 @@ namespace Utility {
         using File::get_ustr;
         using File::operator ALLEGRO_FILE*;
     private:
-        FileSocket(ALLEGRO_FILE* file);
+        FileSocket(std::string uri, ALLEGRO_FILE* file);
     };
 
 } // namespace Utility

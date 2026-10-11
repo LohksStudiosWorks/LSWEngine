@@ -20,6 +20,8 @@ namespace Utility {
         static File open_mem(void* data, size_t len, const char* mode = "wb+");
         static File make_memory(size_t mem_len);
 
+        std::string get_path() const;
+
         void close();
 
         size_t read(void* ptr, size_t size) const;
@@ -97,10 +99,11 @@ namespace Utility {
 
         operator ALLEGRO_FILE*() const;
     protected:
-        File(ALLEGRO_FILE* file);
-        File(ALLEGRO_FILE* file, std::function<void(ALLEGRO_FILE*)> destroyer);
+        File(std::string path, ALLEGRO_FILE* file);
+        File(std::string path, ALLEGRO_FILE* file, std::function<void(ALLEGRO_FILE*)> destroyer);
 
         std::shared_ptr<ALLEGRO_FILE> m_file;
+        std::string m_path;
     };
 
 } // namespace Utility
