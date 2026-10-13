@@ -1,5 +1,7 @@
 #include <LSWE/graphics/monitor_info.hpp>
 
+#include <cmath>
+
 #include <LSWE/utility/startup.hpp>
 
 namespace LSWE {
@@ -27,13 +29,11 @@ namespace Graphics {
     }
 
     int MonitorInfo::get_width() const {
-		int res = m_info.x2 - m_info.x1;
-		return res < 0 ? -res : res;
+		return std::abs(m_info.x2 - m_info.x1);
     }
 
     int MonitorInfo::get_height() const {
-		int res = m_info.y2 - m_info.y1;
-		return res < 0 ? -res : res;
+		return std::abs(m_info.y2 - m_info.y1);
     }
 
     int MonitorInfo::get_display_adapter_index() const {

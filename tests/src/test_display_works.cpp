@@ -13,8 +13,10 @@ int main(int argc, char *argv[]) {
 
     auto fp = Utility::File::open_mem((void*)jpg_embedded.data(), jpg_embedded.length(), "rb");
 
+    Graphics::MonitorInfo moninfo;
+
     Graphics::Display::set_new_window_title("Fancy test");
-    auto display = Graphics::Display::create(1280, 720);
+    auto display = Graphics::Display::create(moninfo.get_width() * 0.75f, moninfo.get_height() * 0.75f);
     auto bitmap = Graphics::Bitmap::load(fp, ".jpg");
 
     display->clear(al_map_rgb(50, 50, 50));
