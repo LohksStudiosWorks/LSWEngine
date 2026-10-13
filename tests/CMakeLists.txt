@@ -21,6 +21,10 @@ set(JPG_TEST_LIST
     test_display_works
 )
 
+set(GIF_TEST_LIST
+    test_gif_works
+)
+
 set(FONT_TEST_LIST
     test_font_works
 )
@@ -43,6 +47,10 @@ foreach(test_src ${TEST_SOURCES})
 
     if(test_name IN_LIST JPG_TEST_LIST)
         b_embed(${test_name} "resources/vrchat_ex.jpg")
+    endif()
+
+    if(test_name IN_LIST GIF_TEST_LIST)
+        b_embed(${test_name} "resources/my_gif.gif")
     endif()
 
     if(test_name IN_LIST FONT_TEST_LIST)

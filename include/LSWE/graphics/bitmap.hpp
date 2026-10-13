@@ -10,15 +10,38 @@ namespace Graphics {
 
     class Display;
     class SubBitmap;
+    class GIF;
 
-    class Bitmap {
+    class DrawableBitmap {
+    public:
+        void draw(float dx, float dy, int flags);
+        void draw(ALLEGRO_COLOR tint, float dx, float dy, int flags);
+        void draw(float cx, float cy, float dx, float dy, float angle_rad, int flags);
+        void draw(ALLEGRO_COLOR tint, float cx, float cy, float dx, float dy, float angle_rad, int flags);
+        void draw(float cx, float cy, float dx, float dy, float x_scale, float y_scale, float angle_rad, int flags);
+        void draw(ALLEGRO_COLOR tint, float cx, float cy, float dx, float dy, float x_scale, float y_scale, float angle_rad, int flags);
+        void draw(float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh, int flags);
+        void draw(ALLEGRO_COLOR tint, float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh, int flags);
+
+        void draw_region(float sx, float sy, float sw, float sh, float dx, float dy, int flags);
+        void draw_region(ALLEGRO_COLOR tint, float sx, float sy, float sw, float sh, float dx, float dy, int flags);
+        void draw_region(float sx, float sy, float sw, float sh, ALLEGRO_COLOR tint, float cx, float cy, float dx, float dy, float x_scale, float y_scale, float angle_rad, int flags);
+
+        operator ALLEGRO_BITMAP*() const;
+    protected:
+        void assert_not_self_target() const;
+
+        virtual ALLEGRO_BITMAP* get_bitmap() const = 0;
+    };
+
+    class Bitmap : public DrawableBitmap {
     public:
         static Bitmap create(int width, int height);
         static Bitmap load(const char* filename, int flags = 0);
         static Bitmap load(ALLEGRO_FILE* file, const char* ident = ".png", int flags = 0);
         static Bitmap get_target();
 
-        Bitmap create_sub(int x, int y, int w, int h);
+        SubBitmap create_sub(int x, int y, int w, int h);
         Bitmap clone();
 
         bool save(const char* filename);
@@ -76,30 +99,16 @@ namespace Graphics {
 
         void convert_mask_to_alpha(ALLEGRO_COLOR mask_color);
 
-        void draw(float dx, float dy, int flags);
-        void draw(ALLEGRO_COLOR tint, float dx, float dy, int flags);
-        void draw(float cx, float cy, float dx, float dy, float angle_rad, int flags);
-        void draw(ALLEGRO_COLOR tint, float cx, float cy, float dx, float dy, float angle_rad, int flags);
-        void draw(float cx, float cy, float dx, float dy, float x_scale, float y_scale, float angle_rad, int flags);
-        void draw(ALLEGRO_COLOR tint, float cx, float cy, float dx, float dy, float x_scale, float y_scale, float angle_rad, int flags);
-        void draw(float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh, int flags);
-        void draw(ALLEGRO_COLOR tint, float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh, int flags);
-
-        void draw_region(float sx, float sy, float sw, float sh, float dx, float dy, int flags);
-        void draw_region(ALLEGRO_COLOR tint, float sx, float sy, float sw, float sh, float dx, float dy, int flags);
-        void draw_region(float sx, float sy, float sw, float sh, ALLEGRO_COLOR tint, float cx, float cy, float dx, float dy, float x_scale, float y_scale, float angle_rad, int flags);
-
         void set_as_target();
-
-        operator ALLEGRO_BITMAP*() const;
     protected:
         Bitmap(ALLEGRO_BITMAP* bitmap, bool is_ref, std::shared_ptr<ALLEGRO_BITMAP> parent);
         Bitmap(std::shared_ptr<ALLEGRO_BITMAP> bitmap_ref);
 
-        void assert_not_self_target() const;
+        ALLEGRO_BITMAP* get_bitmap() const override;
 
         friend class SubBitmap;
         friend class Display;
+        friend class GIF;
 
         std::shared_ptr<ALLEGRO_BITMAP> m_bitmap, m_parent;
     };
@@ -115,6 +124,8 @@ namespace Graphics {
         void reparent(int x, int y, int w, int h);
     private:
         SubBitmap(ALLEGRO_BITMAP* bitmap, bool is_ref, std::shared_ptr<ALLEGRO_BITMAP> parent);
+
+        using Bitmap::get_bitmap;
     };
     
 } // namespace Graphics
