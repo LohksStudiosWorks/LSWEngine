@@ -5,8 +5,34 @@
 
 #include <memory>
 
+#include <LSWE/graphics/bitmap.hpp>
+
 namespace LSWE {
 namespace Graphics {
+
+    class LockedRegion {
+    public:
+        LockedRegion(Bitmap bmp, int pos_x = -1, int pos_y = -1, int width = -1, int height = -1, int format = ALLEGRO_LOCK_READWRITE, int flags = ALLEGRO_PIXEL_FORMAT_ANY);
+
+		int get_format_pixel_size() const;
+		int get_format_bits() const;
+		int get_pixel_block_size() const;
+		int get_pixel_block_width() const;
+		int get_pixel_block_height() const;
+
+		void* get_data();
+		const void* get_data() const;
+		int get_format() const;
+		int get_pitch() const;
+		int get_pixel_size() const;
+
+		void put_pixel(const int pos_x, const int pos_y, const ALLEGRO_COLOR color);
+		void put_blended_pixel(const int pos_x, const int pos_y, const ALLEGRO_COLOR color);
+    private:
+        Bitmap m_bitmap;
+
+        std::shared_ptr<ALLEGRO_LOCKED_REGION> m_locked_region;
+    };
     
 } // namespace Graphics
 } // namespace LSWE
