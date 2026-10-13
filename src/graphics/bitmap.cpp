@@ -152,6 +152,10 @@ namespace Graphics {
         al_set_new_bitmap_samples(samples);
     }
 
+    void Bitmap::reset_new_options() {
+        al_reset_new_display_options();
+    }
+
     void Bitmap::draw_pixel(float x, float y, ALLEGRO_COLOR color) {
         Utility::MakeTemporaryTarget temp_target(get_bitmap());
         al_draw_pixel(x, y, color);

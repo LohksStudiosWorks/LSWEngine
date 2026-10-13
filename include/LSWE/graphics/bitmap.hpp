@@ -56,6 +56,7 @@ namespace Graphics {
         static void set_new_depth(int format);
         static int  get_new_samples();
         static void set_new_samples(int samples);
+        static void reset_new_options();
 
         void draw_pixel(float x, float y, ALLEGRO_COLOR color);
         void put_pixel(int x, int y, ALLEGRO_COLOR color);

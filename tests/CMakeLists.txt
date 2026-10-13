@@ -19,6 +19,7 @@ set(OGG_TEST_LIST
 
 set(JPG_TEST_LIST
     test_display_works
+    test_locked_region_cyberpunk
 )
 
 set(GIF_TEST_LIST

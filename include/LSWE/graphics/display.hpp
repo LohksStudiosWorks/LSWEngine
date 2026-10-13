@@ -16,12 +16,6 @@ namespace Graphics {
     public:
         static Display create(int w, int h);
 
-        static int  get_new_flags();
-        static void set_new_flags(int flags = 0);
-        static int  get_new_option(int option);
-        static void set_new_option(int option, int value, int importance = ALLEGRO_SUGGEST);
-        static void reset_new_options();
-
         static void convert_memory_bitmaps();
         static void hold_bitmap_drawing(bool hold);
         static bool get_is_bitmap_drawing_held();

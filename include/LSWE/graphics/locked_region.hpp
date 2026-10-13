@@ -12,10 +12,10 @@ namespace Graphics {
 
     class LockedRegion {
     public:
-        LockedRegion(Bitmap bmp, int pos_x = -1, int pos_y = -1, int width = -1, int height = -1, int format = ALLEGRO_LOCK_READWRITE, int flags = ALLEGRO_PIXEL_FORMAT_ANY);
+        LockedRegion(Bitmap bmp, int format = ALLEGRO_PIXEL_FORMAT_ANY, int flags = ALLEGRO_LOCK_READWRITE, int pos_x = -1, int pos_y = -1, int width = -1, int height = -1);
 
-		int get_format_pixel_size() const;
-		int get_format_bits() const;
+		int get_pixel_format_size() const;
+		int get_pixel_format_bits() const;
 		int get_pixel_block_size() const;
 		int get_pixel_block_width() const;
 		int get_pixel_block_height() const;

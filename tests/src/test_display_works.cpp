@@ -19,10 +19,16 @@ int main(int argc, char *argv[]) {
     auto display = Graphics::Display::create(moninfo.get_width() * 0.75f, moninfo.get_height() * 0.75f);
     auto bitmap = Graphics::Bitmap::load(fp, ".jpg");
 
+    const float scales[2] = {
+        1.0f * display.get_width() / bitmap.get_width(),
+        1.0f * display.get_height() / bitmap.get_height(),
+    };
+    const float min = std::min(scales[0], scales[1]);
+
     display->clear(al_map_rgb(50, 50, 50));
 
     bitmap.draw(bitmap.get_width() / 2, bitmap.get_height() / 2, display.get_width() / 2, display.get_height() / 2,
-        display.get_width() * 0.8f / bitmap.get_width(), display.get_height() * 0.8f / bitmap.get_height(), 0.0f, 0);
+        0.8f * min, 0.8f * min, 0.0f, 0);
     
     display.flip();
 

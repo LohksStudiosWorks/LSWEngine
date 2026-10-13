@@ -6,3 +6,5 @@
 #include <LSWE/utility/make_temporary_target.hpp>
 
 #include <LSWE/utility/file.hpp>
+#include <LSWE/utility/file_chooser.hpp>
+#include <LSWE/utility/message_box.hpp>

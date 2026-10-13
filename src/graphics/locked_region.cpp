@@ -6,7 +6,7 @@
 namespace LSWE {
 namespace Graphics {
 
-    LockedRegion::LockedRegion(Bitmap bmp, int pos_x, int pos_y, int width, int height, int format, int flags)
+    LockedRegion::LockedRegion(Bitmap bmp, int format, int flags, int pos_x, int pos_y, int width, int height)
         : m_bitmap(bmp)
     {
         if (pos_x < 0) pos_x = 0;
@@ -16,18 +16,18 @@ namespace Graphics {
 
         m_locked_region = std::shared_ptr<ALLEGRO_LOCKED_REGION>(
             al_lock_bitmap_region(bmp, pos_x, pos_y, width, height, format, flags),
-            [this](ALLEGRO_LOCKED_REGION*){ al_unlock_bitmap(this->m_bitmap); }
+            [bmp](ALLEGRO_LOCKED_REGION*){ al_unlock_bitmap(bmp); }
         );
 
         if (!m_locked_region)
             throw Exception::NullException("Locked region was null");
     }
 
-	int LockedRegion::get_format_pixel_size() const {
+	int LockedRegion::get_pixel_format_size() const {
 		return al_get_pixel_size(m_locked_region->format);
 	}
 
-	int LockedRegion::get_format_bits() const {
+	int LockedRegion::get_pixel_format_bits() const {
 		return al_get_pixel_format_bits(m_locked_region->format);
 	}
 
