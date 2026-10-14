@@ -8,10 +8,8 @@ namespace Utility {
 
     int create_message_box(char const *title, char const *heading, char const *text, int flags, char const *buttons) {
         // This message box does not need Allegro init at all.
-        
-        ALLEGRO_DISPLAY* disp = al_get_current_display();
 
-        return al_show_native_message_box(disp,
+        return al_show_native_message_box(nullptr,
             title, heading, text,
             buttons, flags);
     }

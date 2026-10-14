@@ -19,8 +19,7 @@ namespace Utility {
     }
     
     std::vector<std::string> FileChooser::request() {
-        ALLEGRO_DISPLAY* disp = al_get_current_display();
-        if (!al_show_native_file_dialog(disp, m_choose.get())) 
+        if (!al_show_native_file_dialog(nullptr, m_choose.get())) 
             return {};
         
         int count = al_get_native_file_dialog_count(m_choose.get());
