@@ -4,14 +4,16 @@
 #include <allegro5/allegro_native_dialog.h>
 
 #include <memory>
+#include <string>
 #include <vector>
-#include <span>
+#include <optional>
 
 namespace LSWE {
 namespace Utility {
 
+    class MenuBuilder;
+
     class Menu {
-        class submenu;
     public:
         enum class type : uint8_t { BAR, POPUP };
         enum class flags : uint8_t { 
@@ -21,93 +23,89 @@ namespace Utility {
             CHECKED = ALLEGRO_MENU_ITEM_CHECKED
         };
 
-        class element {
-        public:
-            static element create_item(std::string caption, uint16_t id, Menu::flags flags = Menu::flags::DEFAULT);
-            static element create_div_item();
-            static element create_submenu(std::string caption, Menu::flags flags = Menu::flags::DEFAULT);
-
-            std::string get_caption() const;
-            Menu::flags get_flags() const;
-            int get_pos() const;
-            uint16_t get_id() const;
-
-            void set_caption(std::string caption);
-            void set_flags(Menu::flags flags);
-
-            void destroy_self();
-            bool destroy_this_submenu();
-
-            bool has_menu() const;
-            submenu& as_menu();
-        private:
-            element(std::string caption, uint16_t id, Menu::flags flags, bool make_menu);
-            element();
-
-            friend class submenu;
-
-            std::string caption;
-            int pos;
-            uint16_t id;
-            Menu::flags flags;
-
-            ALLEGRO_MENU* self_menu;
-            submenu* self_menu_listing;
-            std::shared_ptr<submenu> sub_menu;
-        };
-
-        Menu(const Menu&) = delete;
-        void operator=(const Menu&) = delete;
-
         static Menu create(type type);
+        static Menu copy(const Menu& copy_from, type type);
+        static Menu build_from(type type, MenuBuilder builder);
 
-        Menu clone_as(type type);
+        std::string get_caption() const;
+        Menu::flags get_flags() const;
+        int get_pos() const;
+        uint16_t get_id() const;
+        bool set_caption(std::string caption);
+        bool set_flags(Menu::flags flags);
 
-        submenu& interface();
-        submenu* operator->();
+        Menu push_item(std::string caption, uint16_t id, Menu::flags flags = Menu::flags::DEFAULT);
+        Menu push_div();
+        Menu push_new_menu(std::string caption, Menu::flags flags = Menu::flags::DEFAULT);
 
-        element* find_by_event(const ALLEGRO_EVENT& ev);
+        Menu operator[](int pos) const;
+        Menu operator()(uint16_t id) const;
 
+        MenuBuilder export_builder() const;
+
+        std::optional<Menu> find_from_event(const ALLEGRO_EVENT& ev);
+        
         operator ALLEGRO_MENU*() const;
-
         ALLEGRO_EVENT_SOURCE* get_event_source() const;
         operator ALLEGRO_EVENT_SOURCE*() const;
-    private:
-        Menu(ALLEGRO_MENU* menu_base, type type);
+    protected:
+        // base menu:
+        Menu(ALLEGRO_MENU* menu);
+        // children menu:
+        Menu(ALLEGRO_MENU* self_menu, int pos, uint16_t id);
 
-        static element* find_recursive(submenu& menu, uint16_t id);
+        ALLEGRO_MENU* get_menu() const;
+        // adds submenu in it
+        ALLEGRO_MENU* get_or_recreate_as_menu();
+        // remove submenu in it
+        void recreate_as_item();
 
-        class submenu {
-        public:
-            element& operator[](size_t pos);
-            submenu& push(element element);
-            submenu& push(submenu menu_element);
-            bool remove(size_t pos);
-            size_t size() const;
+        static void import_from_builder(Menu& menu, const MenuBuilder& builder);
 
-            std::vector<element>::iterator begin();
-            std::vector<element>::iterator end();
-        private:
-            submenu(ALLEGRO_MENU* self, element* parent);
+        std::optional<Menu> find_recursive(uint16_t by_id);
 
-            friend class Menu;
-            friend class element;
+        std::shared_ptr<ALLEGRO_MENU> m_root_menu;
+        ALLEGRO_MENU* m_this_menu;
 
-            ALLEGRO_MENU* self_menu;
-            element* parent = nullptr;
-            std::vector<element> elements;
-        };
-
-        std::shared_ptr<ALLEGRO_MENU> m_menu;
-        submenu m_menu_interface;
-
-        ALLEGRO_EVENT_SOURCE* m_menu_event_source;
-        const type m_type;
+        int m_pos; // -1 == base menu.
+        const uint16_t m_id; // -1 == div
     };
 
-	constexpr Menu::flags operator|(const Menu::flags& a, const Menu::flags& b) { return static_cast<Menu::flags>(static_cast<std::underlying_type_t<Menu::flags>>(a) | static_cast<std::underlying_type_t<Menu::flags>>(b)); }
-	constexpr Menu::flags operator&(const Menu::flags& a, const Menu::flags& b) { return static_cast<Menu::flags>(static_cast<std::underlying_type_t<Menu::flags>>(a) & static_cast<std::underlying_type_t<Menu::flags>>(b)); }
+    class MenuBuilder {
+    public:
+        MenuBuilder(std::string caption, uint16_t id, Menu::flags flags = Menu::flags::DEFAULT);
+        MenuBuilder();
+        MenuBuilder(std::string caption, std::vector<MenuBuilder> submenus, Menu::flags flags = Menu::flags::DEFAULT);
 
+        std::string dump() const;
+
+        std::string get_caption() const;
+        uint16_t get_id() const;
+        Menu::flags get_flags() const;
+        const std::vector<MenuBuilder>& get_submenus() const;
+
+        MenuBuilder& set_caption(std::string caption);
+        MenuBuilder& set_id(uint16_t id);
+        MenuBuilder& set_flags(Menu::flags flags);
+        MenuBuilder& set_submenus(std::vector<MenuBuilder> submenus);
+    private:
+        std::vector<MenuBuilder> submenus;
+        std::string caption;
+        uint16_t id;
+        Menu::flags flags;
+    };
     
 } // namespace Utility
+
+constexpr Utility::Menu::flags operator|(const Utility::Menu::flags& a, const Utility::Menu::flags& b) {
+    return static_cast<Utility::Menu::flags>(
+        static_cast<std::underlying_type_t<Utility::Menu::flags>>(a) | static_cast<std::underlying_type_t<Utility::Menu::flags>>(b)
+    );
+}
+constexpr Utility::Menu::flags operator&(const Utility::Menu::flags& a, const Utility::Menu::flags& b) {
+    return static_cast<Utility::Menu::flags>(
+        static_cast<std::underlying_type_t<Utility::Menu::flags>>(a) & static_cast<std::underlying_type_t<Utility::Menu::flags>>(b)
+    );
+}
+
 } // namespace LSWE

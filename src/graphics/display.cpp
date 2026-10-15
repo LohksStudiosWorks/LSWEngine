@@ -228,9 +228,9 @@ namespace Graphics {
     }
 
     bool Display::set_menu(ALLEGRO_MENU* menu) {
-        if (!al_popup_menu(menu, m_display.get())) // popup has check if it's pop up. so, pop up first, if failed, it may be non pop up.
-            return al_set_display_menu(m_display.get(), menu);
-        return true;
+        if (al_is_menu_popup(menu))
+            return al_popup_menu(menu, m_display.get());
+        return al_set_display_menu(m_display.get(), menu);
     }
 
     void Display::unset_menu() {
