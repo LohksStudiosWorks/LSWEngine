@@ -1,6 +1,8 @@
 #include <LSWE/lswe.hpp>
 #include <iostream>
 #include <cstdint>
+#include <future>
+#include <chrono>
 
 using namespace LSWE;
 
@@ -10,15 +12,33 @@ int main(int argc, char *argv[]) {
 
     Graphics::MonitorInfo moninfo;
 
-    auto file_chooser = Utility::FileChooser::create(
-        "Select an image to render",
-        "image/jpg;*.jpg;image/png;*.png",
-        "",
-        ALLEGRO_FILECHOOSER_FILE_MUST_EXIST | ALLEGRO_FILECHOOSER_PICTURES);
+    auto test_select = std::async(std::launch::async, [] {
+        auto file_chooser = Utility::FileChooser::create(
+            "Select an image to render",
+            "image/jpg;*.jpg;image/png;*.png",
+            "",
+            ALLEGRO_FILECHOOSER_FILE_MUST_EXIST | ALLEGRO_FILECHOOSER_PICTURES);
 
-    std::vector<std::string> list;
-    while(list.size() == 0) 
-        list = file_chooser.request();
+        std::vector<std::string> list;
+
+        while(list.size() == 0) 
+            list = file_chooser.request();
+
+        return list;
+    });
+
+    for(double noww = al_get_time() + 5.0; noww - al_get_time() > 0.0;) {
+        if (test_select.wait_for(std::chrono::milliseconds(100)) == std::future_status::ready)
+            break;
+        al_rest(1.0);
+    }
+
+    if (test_select.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready) {
+        std::cout << "Dropping: no interaction." << std::endl;
+        std::exit(0);
+    }
+
+    auto list = test_select.get();
 
     Utility::create_message_box("About to load the following!", "This is the path selected:", list[0].c_str(), 0, "YAY|YOO|YAHOO|YEE");
 

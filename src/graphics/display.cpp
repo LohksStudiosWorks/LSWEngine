@@ -1,5 +1,7 @@
 #include <LSWE/graphics/display.hpp>
 
+#include <allegro5/allegro_native_dialog.h>
+
 #include <LSWE/utility/startup.hpp>
 #include <LSWE/utility/make_temporary_target.hpp>
 #include <LSWE/exception/general_null_exception.hpp>
@@ -9,6 +11,7 @@ namespace Graphics {
 
     Display Display::create(int w, int h) {
         Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitDialog>::instance().setup();
 
         return Display(al_create_display(w, h));
     }
@@ -224,6 +227,16 @@ namespace Graphics {
         al_set_target_bitmap(m_backbuffer);
     }
 
+    bool Display::set_menu(ALLEGRO_MENU* menu) {
+        if (!al_popup_menu(menu, m_display.get())) // popup has check if it's pop up. so, pop up first, if failed, it may be non pop up.
+            return al_set_display_menu(m_display.get(), menu);
+        return true;
+    }
+
+    void Display::unset_menu() {
+        al_set_display_menu(m_display.get(), nullptr);
+    }
+
     Bitmap Display::get_backbuffer() {
         return m_backbuffer;
     }
@@ -247,6 +260,11 @@ namespace Graphics {
         return al_get_display_event_source(m_display.get());
     }
 
+    Display& Display::operator<<(ALLEGRO_MENU* menu) {
+        set_menu(menu);
+        return *this;
+    }
+
     const Bitmap* Display::operator->() const {
         return &m_backbuffer;
     }
@@ -265,7 +283,9 @@ namespace Graphics {
     }
     
     Display::Display(ALLEGRO_DISPLAY* display)
-        : m_display(display, al_destroy_display), m_backbuffer(al_get_backbuffer(m_display.get()), true, {})
+        : m_display(display,
+            [](ALLEGRO_DISPLAY* d) { al_set_display_menu(d, nullptr); al_destroy_display(d); }),
+          m_backbuffer(al_get_backbuffer(m_display.get()), true, {})
     {
         if (!m_display)
             throw Exception::NullException("Display was null");

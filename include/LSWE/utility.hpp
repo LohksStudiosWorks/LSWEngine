@@ -9,3 +9,4 @@
 #include <LSWE/utility/file_chooser.hpp>
 #include <LSWE/utility/message_box.hpp>
 #include <LSWE/utility/text_log.hpp>
+#include <LSWE/utility/menu.hpp>

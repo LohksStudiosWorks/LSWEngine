@@ -2,6 +2,7 @@
 
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_image.h>
+#include <allegro5/allegro_native_dialog.h>
 
 #include <memory>
 #include <span>
@@ -77,6 +78,9 @@ namespace Graphics {
 
         void set_as_target();
 
+        bool set_menu(ALLEGRO_MENU* menu);
+        void unset_menu();
+
         Bitmap get_backbuffer();
 
         void flip();
@@ -84,6 +88,8 @@ namespace Graphics {
         bool wait_for_vsync();
 
         ALLEGRO_EVENT_SOURCE* get_event_source() const;
+
+        Display& operator<<(ALLEGRO_MENU* menu);
 
         const Bitmap* operator->() const;
         Bitmap* operator->();

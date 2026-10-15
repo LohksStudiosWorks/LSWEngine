@@ -36,6 +36,9 @@ namespace Utility {
         if (!al_init())
             throw Exception::UtilityException("Could not start Allegro system");
 
+#ifndef _WIN32
+        al_set_new_display_flags(ALLEGRO_GTK_TOPLEVEL); // make menus work. Use ALLEGRO_FULLSCREEN_WINDOW for fullscreen, or disable this feature.
+#endif
         ran = true;
     }
 
