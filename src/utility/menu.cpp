@@ -2,10 +2,10 @@
 
 #include <limits>
 #include <string>
-#include <algorithm>
 
 #include <LSWE/utility/startup.hpp>
 #include <LSWE/exception/general_null_exception.hpp>
+#include <LSWE/exception/menu_exception.hpp>
 
 namespace LSWE {
 namespace Utility {
@@ -40,7 +40,7 @@ namespace Utility {
     }
 
     Menu Menu::MenuItem::get_child_menu() const {
-        if (m_pos < 0) throw 1;
+        if (m_pos < 0) throw Exception::MenuException("The MenuItem did not have a valid position (not an item?)");
         ALLEGRO_MENU* submenu = al_get_menu_item_submenu(m_this_menu, - m_pos);
         return Menu(submenu, false);
     }
@@ -178,13 +178,13 @@ namespace Utility {
     }
 
     Menu::MenuItem Menu::operator[](int pos) const {
-        if (al_get_menu_item_flags(m_this_menu, - pos) < 0) throw 1;
+        if (al_get_menu_item_flags(m_this_menu, - pos) < 0) throw Exception::MenuException("Index out of range");
 
         return MenuItem(m_this_menu, pos, al_get_menu_item_id(m_this_menu, - pos));
     }
 
     Menu::MenuItem Menu::operator()(uint16_t id) const {
-        if (al_get_menu_item_flags(m_this_menu, id) < 0) throw 1;
+        if (al_get_menu_item_flags(m_this_menu, id) < 0) throw Exception::MenuException("Id not found in menu");
         
         return MenuItem(m_this_menu, al_get_menu_item_pos(m_this_menu, id), id);
     }
@@ -228,7 +228,7 @@ namespace Utility {
           m_base_menu(m_root_menu),
           m_this_menu(menu)
     {
-        if (!m_this_menu) throw 1;
+        if (!m_this_menu) throw Exception::NullException("Menu was null");
     }
 
     Menu::Menu(ALLEGRO_MENU* menu, bool handle_shared, WeakUniquePtr<ALLEGRO_MENU> parent)
@@ -236,7 +236,7 @@ namespace Utility {
           m_base_menu(parent),
           m_this_menu(menu)
     {
-        if (!m_this_menu) throw 1;
+        if (!m_this_menu) throw Exception::NullException("Menu was null");
     }
     
     void Menu::import_from_builder(Menu& menu, const MenuBuilder& builder) {
