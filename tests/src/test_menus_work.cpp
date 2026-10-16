@@ -1,6 +1,7 @@
 #include <LSWE/lswe.hpp>
 #include <iostream>
 #include <cstdint>
+#include <cmath>
 
 using namespace LSWE;
 
@@ -35,21 +36,24 @@ int main(int argc, char *argv[]) {
 
     std::cout << "MENU BUILDER JSON:\n" << menu_builder.dump() << std::endl;
 
-    auto menu = Utility::Menu::build_from(Utility::Menu::type::BAR, menu_builder);
-    auto menu_popup = Utility::Menu::copy(menu, Utility::Menu::type::POPUP);
-    
-
+    auto orig_menu = Utility::Menu::build_from(Utility::Menu::type::BAR, menu_builder);
+    auto orig_menu_popup = Utility::Menu::copy(orig_menu, Utility::Menu::type::POPUP);
     auto disp = Graphics::Display::create(1280, 720);
-    al_rest(1.0);
-    
-    disp << menu;    
+
+    al_rest(0.1);
+    disp << orig_menu;
+    disp << orig_menu_popup;
+
+    const auto& menu = disp.get_own_menu().value();
+    const auto& menu_popup = disp.get_own_popup_menu().value();
 
     ALLEGRO_EVENT_QUEUE* ev_qu = al_create_event_queue();
     ALLEGRO_TIMER* tm = al_create_timer(10.0);
     al_register_event_source(ev_qu, disp);
-    al_register_event_source(ev_qu, menu);
-    al_register_event_source(ev_qu, menu_popup);
+    al_register_event_source(ev_qu, disp.get_own_menu().value());
+    al_register_event_source(ev_qu, disp.get_own_popup_menu().value());
     al_register_event_source(ev_qu, al_get_timer_event_source(tm));
+    al_register_event_source(ev_qu, al_get_mouse_event_source());
 
     al_start_timer(tm);
     
@@ -59,7 +63,16 @@ int main(int argc, char *argv[]) {
         if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE || ev.type == ALLEGRO_EVENT_TIMER)
             break;
 
-        std::optional<Utility::Menu> opt_el = ev.user.source == menu
+        if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+            if (ev.mouse.display == disp && ev.mouse.button == 2) {
+                disp.show_own_popup_menu();
+            }
+            continue;
+        }
+        if (ev.type != ALLEGRO_EVENT_MENU_CLICK)
+            continue;
+
+        std::optional<Utility::Menu::MenuItem> opt_el = ev.user.source == menu
             ? menu.find_from_event(ev)
             : menu_popup.find_from_event(ev);
 
@@ -75,24 +88,24 @@ int main(int argc, char *argv[]) {
         std::cout << "Id: " << id << std::endl;
 
         if (opt_el.has_value()) {
-            auto el = opt_el.value();
+            Utility::Menu::MenuItem el = opt_el.value();
 
             std::cout << "Contains: " << el.get_caption() << "; " << el.get_id() << "; POS=" << el.get_pos() << std::endl;
 
             if (el.get_id() == 2)
                 break;
-            if (el.get_id() == 3) {
-                al_rest(0.5);
-                disp << menu_popup;
-            }
                 
-
-            /*if (el.get_id() >= 100) {
-                el.destroy_self();
+            if (el.get_id() == 3) {
+                disp.show_own_popup_menu();
+                continue;
             }
-            else {*/
+
+            if (el.get_id() >= 100) {
+                el.self_remove();
+            }
+            else {
                 el.set_caption(el.get_caption() + "!!");
-            //}
+            }
         }
     }
 

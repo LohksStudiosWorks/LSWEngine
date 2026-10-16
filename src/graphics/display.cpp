@@ -9,6 +9,18 @@
 namespace LSWE {
 namespace Graphics {
 
+
+    Display::~Display() {
+        if (m_menu_bar.has_value()) {
+            m_menu_bar.value().destroy();
+            m_menu_bar.reset();
+        }
+        if (m_menu_popup.has_value()) {
+            m_menu_popup.value().destroy();
+            m_menu_popup.reset();
+        }
+    }
+
     Display Display::create(int w, int h) {
         Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
         Utility::SingletonOf<Utility::AllegroInitDialog>::instance().setup();
@@ -227,14 +239,47 @@ namespace Graphics {
         al_set_target_bitmap(m_backbuffer);
     }
 
-    bool Display::set_menu(ALLEGRO_MENU* menu) {
-        if (al_is_menu_popup(menu))
-            return al_popup_menu(menu, m_display.get());
-        return al_set_display_menu(m_display.get(), menu);
+    Utility::Menu Display::copy_set_menu(Utility::Menu menu_to_copy) {
+        if (menu_to_copy.is_popup()) {
+            if (m_menu_popup.has_value()) {
+                m_menu_popup.value().destroy();
+                m_menu_popup.reset();
+            }
+            m_menu_popup = std::move(menu_to_copy.clone());
+            return m_menu_popup.value();
+        }
+        else {
+            if (m_menu_bar.has_value()) {
+                m_menu_bar.value().destroy();
+                m_menu_bar.reset();
+            }
+            m_menu_bar = std::move(menu_to_copy.clone());
+            return m_menu_bar.value();
+        }
+    }
+    const std::optional<Utility::Menu>& Display::get_own_menu() const {
+        return m_menu_bar;
+    }
+
+    const std::optional<Utility::Menu>& Display::get_own_popup_menu() const {
+        return m_menu_popup;
+    }
+
+    bool Display::show_own_menu() {
+        return m_menu_bar.has_value()
+            ? al_set_display_menu(m_display.get(), m_menu_bar.value())
+            : false;
+    }
+
+    bool Display::show_own_popup_menu() {
+        return m_menu_popup.has_value()
+            ? al_popup_menu(m_menu_popup.value(), m_display.get())
+            : false;
     }
 
     void Display::unset_menu() {
         al_set_display_menu(m_display.get(), nullptr);
+        m_menu_bar.reset();
     }
 
     Bitmap Display::get_backbuffer() {
@@ -260,8 +305,10 @@ namespace Graphics {
         return al_get_display_event_source(m_display.get());
     }
 
-    Display& Display::operator<<(ALLEGRO_MENU* menu) {
-        set_menu(menu);
+    Display& Display::operator<<(Utility::Menu menu_to_copy) {
+        copy_set_menu(menu_to_copy);
+        if (!menu_to_copy.is_popup()) show_own_menu();
+
         return *this;
     }
 

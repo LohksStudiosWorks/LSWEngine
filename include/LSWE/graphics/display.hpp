@@ -7,14 +7,22 @@
 #include <memory>
 #include <span>
 #include <string>
+#include <optional>
 
 #include <LSWE/graphics/bitmap.hpp>
+#include <LSWE/utility/menu.hpp>
 
 namespace LSWE {
 namespace Graphics {
 
     class Display {
     public:
+        ~Display();
+        Display(const Display&) = delete;
+        Display(Display&&) noexcept = default;
+        void operator=(const Display&) = delete;
+        Display& operator=(Display&&) noexcept = default;
+
         static Display create(int w, int h);
 
         static void convert_memory_bitmaps();
@@ -78,7 +86,11 @@ namespace Graphics {
 
         void set_as_target();
 
-        bool set_menu(ALLEGRO_MENU* menu);
+        Utility::Menu copy_set_menu(Utility::Menu menu_to_copy);
+        const std::optional<Utility::Menu>& get_own_menu() const;
+        const std::optional<Utility::Menu>& get_own_popup_menu() const;
+        bool show_own_menu();
+        bool show_own_popup_menu();
         void unset_menu();
 
         Bitmap get_backbuffer();
@@ -89,7 +101,7 @@ namespace Graphics {
 
         ALLEGRO_EVENT_SOURCE* get_event_source() const;
 
-        Display& operator<<(ALLEGRO_MENU* menu);
+        Display& operator<<(Utility::Menu menu_to_copy);
 
         const Bitmap* operator->() const;
         Bitmap* operator->();
@@ -100,6 +112,7 @@ namespace Graphics {
         Display(ALLEGRO_DISPLAY* display);
 
         std::shared_ptr<ALLEGRO_DISPLAY> m_display;
+        std::optional<Utility::Menu> m_menu_bar, m_menu_popup;
         Bitmap m_backbuffer;
     };
 
