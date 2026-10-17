@@ -22,6 +22,10 @@ set(JPG_TEST_LIST
     test_locked_region_cyberpunk
 )
 
+set(PNG_TEST_LIST
+    test_vertex_transform
+)
+
 set(GIF_TEST_LIST
     test_gif_works
 )
@@ -48,6 +52,10 @@ foreach(test_src ${TEST_SOURCES})
 
     if(test_name IN_LIST JPG_TEST_LIST)
         b_embed(${test_name} "resources/vrchat_ex.jpg")
+    endif()
+
+    if(test_name IN_LIST PNG_TEST_LIST)
+        b_embed(${test_name} "resources/dirt_block.png")
     endif()
 
     if(test_name IN_LIST GIF_TEST_LIST)

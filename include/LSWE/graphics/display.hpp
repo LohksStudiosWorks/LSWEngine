@@ -32,8 +32,13 @@ namespace Graphics {
         static void set_new_window_pos(int x, int y);
         static int  get_new_refresh_rate();
         static void set_new_refresh_rate(int refresh_rate = 0);
-        static int  get_new_display_adapter();
-        static void set_new_display_adapter(int adapter = ALLEGRO_DEFAULT_DISPLAY_ADAPTER);
+        static int  get_new_adapter();
+        static void set_new_adapter(int adapter = ALLEGRO_DEFAULT_DISPLAY_ADAPTER);
+        static int  get_new_flags();
+        static void set_new_flags(int flags = 0);
+        static int  get_new_option(int option);
+        static int  get_new_option(int option, int& importance);
+        static void set_new_option(int option, int value, int importance);
         static void set_new_window_title(const char* title);
         static const char* get_new_window_title();
         static bool inhibit_screensaver(bool inhibit);

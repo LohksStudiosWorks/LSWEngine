@@ -11,7 +11,14 @@ namespace Graphics {
 
         m_transform = std::make_shared<ALLEGRO_TRANSFORM>();
         al_identity_transform(m_transform.get());
-    }    
+    }
+
+    Transform::Transform(const ALLEGRO_TRANSFORM* copy_from) {
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+
+        m_transform = std::make_shared<ALLEGRO_TRANSFORM>();
+        al_copy_transform(m_transform.get(), copy_from);
+    }
 
     Transform Transform::clone() {
         Transform copy;
@@ -32,11 +39,11 @@ namespace Graphics {
         return al_get_current_projection_transform();
     }
 
-    void Transform::use() {
+    void Transform::use() const {
         al_use_transform(m_transform.get());
     }
 
-    void Transform::use_projection() {
+    void Transform::use_projection() const {
         al_use_projection_transform(m_transform.get());
     }
 
@@ -124,19 +131,19 @@ namespace Graphics {
         return al_check_inverse(m_transform.get(), tol);
     }
 
-    void Transform::transform_coordinates(float& x, float& y) {
+    void Transform::transform_coordinates(float& x, float& y) const {
         al_transform_coordinates(m_transform.get(), &x, &y);
     }
 
-    void Transform::transform_coordinates(float& x, float& y, float& z) {
+    void Transform::transform_coordinates(float& x, float& y, float& z) const {
         al_transform_coordinates_3d(m_transform.get(), &x, &y, &z);
     }
 
-    void Transform::transform_coordinates(float& x, float& y, float& z, float& w) {
+    void Transform::transform_coordinates(float& x, float& y, float& z, float& w) const {
         al_transform_coordinates_4d(m_transform.get(), &x, &y, &z, &w);
     }
 
-    void Transform::transform_coordinates_projective(float& x, float& y, float& z) {
+    void Transform::transform_coordinates_projective(float& x, float& y, float& z) const {
         al_transform_coordinates_3d_projective(m_transform.get(), &x, &y, &z);
     }
 

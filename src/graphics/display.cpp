@@ -56,12 +56,32 @@ namespace Graphics {
         al_set_new_display_refresh_rate(refresh_rate);
     }
 
-    int  Display::get_new_display_adapter() {
+    int  Display::get_new_adapter() {
         return al_get_new_display_adapter();
     }
 
-    void Display::set_new_display_adapter(int adapter) {
+    void Display::set_new_adapter(int adapter) {
         al_set_new_display_adapter(adapter);
+    }
+
+    int  Display::get_new_flags() {
+        return al_get_new_display_flags();        
+    }
+
+    void Display::set_new_flags(int flags) {
+        al_set_new_display_flags(flags);
+    }
+
+    int  Display::get_new_option(int option) {
+        return al_get_new_display_option(option, nullptr);
+    }
+
+    int  Display::get_new_option(int option, int& importance) {
+        return al_get_new_display_option(option, &importance);
+    }
+
+    void Display::set_new_option(int option, int value, int importance) {
+        al_set_new_display_option(option, value, importance);
     }
 
     void Display::set_new_window_title(const char* title) {

@@ -10,6 +10,7 @@ namespace Graphics {
     class Transform {
     public:
         Transform();
+        Transform(const ALLEGRO_TRANSFORM* copy_from);
 
         Transform clone();
         void copy(const ALLEGRO_TRANSFORM* copy_from);
@@ -18,9 +19,9 @@ namespace Graphics {
         static const ALLEGRO_TRANSFORM* get_current_projection();
 
         // more like positional transform of objects
-        void use();
+        void use() const;
         // more for camera-like transformations
-        void use_projection();
+        void use_projection() const;
 
         Transform& invert();
         Transform& transpose();
@@ -41,10 +42,10 @@ namespace Graphics {
 
         int check_inverse(float tol) const;
 
-        void transform_coordinates(float& x, float& y);
-        void transform_coordinates(float& x, float& y, float& z);
-        void transform_coordinates(float& x, float& y, float& z, float& w);
-        void transform_coordinates_projective(float& x, float& y, float& z);
+        void transform_coordinates(float& x, float& y) const;
+        void transform_coordinates(float& x, float& y, float& z) const;
+        void transform_coordinates(float& x, float& y, float& z, float& w) const;
+        void transform_coordinates_projective(float& x, float& y, float& z) const;
 
         operator ALLEGRO_TRANSFORM*() const;
     private:
