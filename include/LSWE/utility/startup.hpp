@@ -38,6 +38,11 @@ namespace Utility {
      */
     MAKE_SINGLETON_CLASS_NAMED(AllegroInitDialog);
 
+    /**
+     * @brief Init video addon
+     */
+    MAKE_SINGLETON_CLASS_NAMED(AllegroInitVideo);
+
 
     /// AUDIO
 

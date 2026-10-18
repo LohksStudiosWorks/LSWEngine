@@ -34,6 +34,10 @@ set(FONT_TEST_LIST
     test_font_works
 )
 
+set(VIDEO_TEST_LIST
+    test_video_works
+)
+
 
 foreach(test_src ${TEST_SOURCES})
     get_filename_component(test_name ${test_src} NAME_WE)
@@ -60,6 +64,10 @@ foreach(test_src ${TEST_SOURCES})
 
     if(test_name IN_LIST GIF_TEST_LIST)
         b_embed(${test_name} "resources/my_gif.gif")
+    endif()
+
+    if(test_name IN_LIST VIDEO_TEST_LIST)
+        b_embed(${test_name} "resources/video.ogv")
     endif()
 
     if(test_name IN_LIST FONT_TEST_LIST)

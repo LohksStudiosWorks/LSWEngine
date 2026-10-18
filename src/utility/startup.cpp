@@ -8,6 +8,7 @@
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_video.h>
 
 #include <cstdlib>
 #include <atomic>
@@ -88,6 +89,16 @@ namespace Utility {
 
         if (!al_init_native_dialog_addon())
             throw Exception::UtilityException("Could not start Allegro native dialog addon");
+            
+        ran = true;
+    }
+
+    void AllegroInitVideo::setup() {
+        static std::atomic_bool ran = false;
+        if (ran) return;
+
+        if (!al_init_video_addon())
+            throw Exception::UtilityException("Could not start Allegro video addon");
             
         ran = true;
     }

@@ -310,7 +310,7 @@ namespace Graphics {
         return al_get_bitmap_width(get_bitmap());
     }    
 
-    ALLEGRO_BITMAP* GIF::get_bitmap() const  {
+    ALLEGRO_BITMAP* GIF::get_bitmap() const {
         size_t n = m_anim->frames.size();
 
         double seconds = al_get_time() - m_anim->start_time;
