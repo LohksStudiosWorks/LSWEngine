@@ -59,8 +59,8 @@ namespace Graphics {
 
     void Vertexes::draw() const {
         Transform bak(al_get_current_transform());
-        Transform combine = bak.clone();
-        combine.compose(m_object_positioning);
+        Transform combine = m_object_positioning.clone();
+        combine.compose(bak);
 
         combine.use();
 
@@ -78,8 +78,8 @@ namespace Graphics {
         if (from >= to || to > m_vertex_count) return;
 
         Transform bak(al_get_current_transform());
-        Transform combine = bak.clone();
-        combine.compose(m_object_positioning);
+        Transform combine = m_object_positioning.clone();
+        combine.compose(bak);
 
         combine.use();
         al_draw_vertex_buffer(
@@ -96,8 +96,8 @@ namespace Graphics {
         if (from >= to || to > m_vertex_count) return;
         
         Transform bak(al_get_current_transform());
-        Transform combine = bak.clone();
-        combine.compose(m_object_positioning);
+        Transform combine = m_object_positioning.clone();
+        combine.compose(bak);
 
         combine.use();
         al_draw_vertex_buffer(

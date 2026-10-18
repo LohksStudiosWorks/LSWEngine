@@ -12,7 +12,7 @@ namespace Graphics {
         Transform();
         Transform(const ALLEGRO_TRANSFORM* copy_from);
 
-        Transform clone();
+        Transform clone() const;
         void copy(const ALLEGRO_TRANSFORM* copy_from);
 
         static const ALLEGRO_TRANSFORM* get_current();
@@ -28,8 +28,8 @@ namespace Graphics {
         Transform& set_identity();
         Transform& build(float x, float y, float sx, float sy, float theta);
         Transform& build_camera(float position_x, float position_y, float position_z, float look_x, float look_y, float look_z, float up_x, float up_y, float up_z);
-        Transform& build_orthographic(float left, float top, float near, float right, float bottom, float far);
-        Transform& build_perspective(float left, float top, float near, float right, float bottom, float far);
+        Transform& orthographic(float left, float top, float near, float right, float bottom, float far);
+        Transform& perspective(float left, float top, float near, float right, float bottom, float far);
         Transform& translate(float x, float y);
         Transform& translate(float x, float y, float z);
         Transform& rotate(float theta);

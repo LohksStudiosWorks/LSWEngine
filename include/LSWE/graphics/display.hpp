@@ -104,6 +104,10 @@ namespace Graphics {
         void flip_region(int x, int y, int w, int h);
         bool wait_for_vsync();
 
+        void hide_cursor();
+        void show_cursor();
+        void move_mouse(int x, int y);
+
         ALLEGRO_EVENT_SOURCE* get_event_source() const;
 
         Display& operator<<(Utility::Menu menu_to_copy);

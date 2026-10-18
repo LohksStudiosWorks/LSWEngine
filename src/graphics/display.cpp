@@ -24,6 +24,7 @@ namespace Graphics {
     Display Display::create(int w, int h) {
         Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
         Utility::SingletonOf<Utility::AllegroInitDialog>::instance().setup();
+        Utility::SingletonOf<Utility::AllegroInitMouse>::instance().setup();
 
         return Display(al_create_display(w, h));
     }
@@ -319,6 +320,18 @@ namespace Graphics {
     bool Display::wait_for_vsync() {
         Utility::MakeTemporaryTarget temp_target(m_backbuffer);
         return al_wait_for_vsync();
+    }
+
+    void Display::hide_cursor() {
+        al_hide_mouse_cursor(m_display.get());
+    }
+
+    void Display::show_cursor() {
+        al_show_mouse_cursor(m_display.get());
+    }
+
+    void Display::move_mouse(int x, int y) {
+        al_set_mouse_xy(m_display.get(), x, y);
     }
     
     ALLEGRO_EVENT_SOURCE* Display::get_event_source() const {

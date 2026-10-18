@@ -51,72 +51,157 @@ int main(int argc, char *argv[]) {
         set_face(30, -s, -s,  s,  s, -s,  s,   s,-s, -s,  -s, -s, -s);
     }
 
-    al_init();
-    al_install_keyboard();
-    al_init_primitives_addon();
+    std::cout << "Loading PNG data from header..." << std::endl;
 
     const auto png_embedded = b::embed<"resources/dirt_block.png">();
     auto fp = Utility::File::open_mem((void*)png_embedded.data(), png_embedded.length(), "rb");
 
+    constexpr float multiplier_speed = 1.0f;
 
-    Graphics::MonitorInfo moninfo;
-    const int width = moninfo.get_width() * 0.75f;
-    const int height = moninfo.get_height() * 0.75f;
+    const int width = 800;
+    const int height = 600;
 
-    const float fov_rad = 60.0f * ALLEGRO_PI / 180.0f;
-    const float fov_factor = tan(fov_rad / 2.0f);
-    const float aspect = static_cast<float>(height) / static_cast<float>(width);
+    std::cout << "Setting up display flags..." << std::endl;
 
-    Graphics::Display::set_new_flags(ALLEGRO_WINDOWED);
+    Graphics::Display::set_new_flags(ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE);
     Graphics::Display::set_new_option(ALLEGRO_DEPTH_SIZE, 16, ALLEGRO_SUGGEST);
+    Graphics::Display::set_new_option(ALLEGRO_VSYNC, 2, ALLEGRO_SUGGEST);
+
+    std::cout << "Creating display..." << std::endl;
 
     Graphics::Display::set_new_window_title("Fancy test");
     auto display = Graphics::Display::create(width, height);
+
+    std::cout << "Loading png..." << std::endl;
+
     auto bitmap = Graphics::Bitmap::load(fp, ".png");
 
+    std::cout << "Setting up cursor and flags..." << std::endl;
+
+    display.hide_cursor();
     display.set_render_state(ALLEGRO_DEPTH_TEST, 1);
 
-    auto perspective = Graphics::Transform().build_perspective(
-        -1.0f,               // left
-        aspect,              // top
-        1.0f / fov_factor,   // near (z-distance)
-        1.0f,                // right
-        -aspect,             // bottom
-        100.0f               // far
-    );
-    auto camera = Graphics::Transform().build_camera(
-        3.0f, 2.0f, 3.0f, // Camera Position
-        0.0f, 0.0f, 0.0f, // Look-At Target (Center of the cube)
-        0.0f, 1.0f, 0.0f  // Up Vector
-    );
-    perspective.use_projection();
-    camera.use();
+    std::cout << "Setting up perspective and camera..." << std::endl;
 
-    // this builds internally ALLEGRO_VERTEX_BUFFER and stores the cube size
+    Game::PlayerCamera player(2.0f);
+    Game::PlayerPerspective perspective(display);
+    
+    //camera.use();
+    player.teleport(0.0f, 0.0f, 0.0f);
+    player.teleport_angle(-0.7854f, -0.2f);
+    player.calc_apply_camera();
+    perspective.set_fov(120.0f);
+    perspective.build_and_apply();
+
+    std::cout << "Loading vertex buffer..." << std::endl;
+
     auto vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
 
-
-    al_clear_to_color(al_map_rgb(15, 15, 20));
-    al_clear_depth_buffer(1.0f); // Clear the z-buffer
-
-    vertexes.draw();
-
-    display.flip();
-
     Utility::SingletonOf<Utility::AllegroInitMouse>::instance().setup();
+    Utility::SingletonOf<Utility::AllegroInitKeyboard>::instance().setup();
+
     ALLEGRO_EVENT_QUEUE* evq = al_create_event_queue();
+    ALLEGRO_TIMER* timed_ev = al_create_timer(1.0 / 60);
 
     al_register_event_source(evq, display);
     al_register_event_source(evq, al_get_mouse_event_source());
+    al_register_event_source(evq, al_get_keyboard_event_source());
+    al_register_event_source(evq, al_get_timer_event_source(timed_ev));
 
-    while(1) {
+    al_start_timer(timed_ev);
+
+    std::cout << "Start." << std::endl;
+
+    for(bool running = true; running;) {
+        while (al_event_queue_is_empty(evq)) {
+            player.calc_apply_camera();
+            al_clear_to_color(al_map_rgb(15, 15, 20));
+            al_clear_depth_buffer(1.0f);
+
+            vertexes->translate(5.0f, 0.0f, 0.0f);
+            vertexes.draw();
+            vertexes->translate(0.0f, 0.0f, 5.0f);
+            vertexes.draw();
+            vertexes->translate(-5.0f, 0.0f, 0.0f);
+            vertexes.draw();
+            vertexes->translate(-5.0f, 0.0f, 0.0f);
+            vertexes.draw();
+            vertexes->translate(0.0f, 0.0f, -5.0f);
+            vertexes.draw();
+            vertexes->translate(0.0f, 0.0f, -5.0f);
+            vertexes.draw();
+            vertexes->translate(5.0f, 0.0f, 0.0f);
+            vertexes.draw();
+            vertexes->translate(5.0f, 0.0f, 0.0f);
+            vertexes.draw();
+            vertexes->translate(-5.0f, 0.0f, 5.0f);
+            
+            display.flip();
+        }
+
         ALLEGRO_EVENT ev;
-        if (!al_wait_for_event_timed(evq, &ev, 3.0))
+        al_wait_for_event(evq, &ev);
+
+        switch (ev.type) {
+        case ALLEGRO_EVENT_DISPLAY_CLOSE:
+            running = false;
             break;
-        if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+        case ALLEGRO_EVENT_TIMER:
+        {
+            player.cpu_tick();
+
+            ALLEGRO_KEYBOARD_STATE key_state;
+            al_get_keyboard_state(&key_state);
+
+            const float prop = (0.018f + static_cast<float>(al_key_down(&key_state, ALLEGRO_KEY_LSHIFT)) * 0.035f) * multiplier_speed;
+
+            if (al_key_down(&key_state, ALLEGRO_KEY_W)) {
+                player.walk_towards(0.0f, prop);
+            }
+            if (al_key_down(&key_state, ALLEGRO_KEY_S)) {
+                player.walk_towards(0.0f, -prop);
+            }
+            if (al_key_down(&key_state, ALLEGRO_KEY_A)) {
+                player.walk_towards(-prop, 0.0f);
+            }
+            if (al_key_down(&key_state, ALLEGRO_KEY_D)) {
+                player.walk_towards(prop, 0.0f);
+            }
+            if (al_key_down(&key_state, ALLEGRO_KEY_SPACE) && player.get_y() == 0) {
+                player.jump(0.3f);
+            }
+        }
             break;
+        case ALLEGRO_EVENT_KEY_UP:
+            switch(ev.keyboard.keycode) {
+            case ALLEGRO_KEY_ESCAPE:
+                running = false;
+                break;
+            case ALLEGRO_KEY_F11:
+                display.set_flag(ALLEGRO_FULLSCREEN_WINDOW, !(display.get_flags() & ALLEGRO_FULLSCREEN_WINDOW));
+                display.acknowledge_resize();
+                perspective.build_and_apply();
+                vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+                break;
+            case ALLEGRO_KEY_R:
+                player.teleport(0.0f, 0.0f, 0.0f);
+                player.teleport_angle(-0.7854f, -0.2f);
+                break;
+            }
+            break;
+        case ALLEGRO_EVENT_MOUSE_AXES:
+            player.move_angle(- ev.mouse.dx * 0.35f, ev.mouse.dy * 0.35f);
+            display.move_mouse(width / 2, height / 2);
+            break;
+        case ALLEGRO_EVENT_DISPLAY_RESIZE:
+            display.acknowledge_resize();
+            perspective.build_and_apply();
+            vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+            break;
+        }
     }
     
+    al_destroy_timer(timed_ev);
     al_destroy_event_queue(evq);
 
     std::cout << "PASSED!" << std::endl;

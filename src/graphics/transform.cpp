@@ -20,7 +20,7 @@ namespace Graphics {
         al_copy_transform(m_transform.get(), copy_from);
     }
 
-    Transform Transform::clone() {
+    Transform Transform::clone() const {
         Transform copy;
         al_copy_transform(copy.m_transform.get(), m_transform.get());
         return copy;
@@ -72,12 +72,12 @@ namespace Graphics {
         return *this;
     }
 
-    Transform& Transform::build_orthographic(float left, float top, float near, float right, float bottom, float far) {
+    Transform& Transform::orthographic(float left, float top, float near, float right, float bottom, float far) {
         al_orthographic_transform(m_transform.get(), left, top, near, right, bottom, far);
         return *this;
     }
 
-    Transform& Transform::build_perspective(float left, float top, float near, float right, float bottom, float far) {
+    Transform& Transform::perspective(float left, float top, float near, float right, float bottom, float far) {
         al_perspective_transform(m_transform.get(), left, top, near, right, bottom, far);
         return *this;
     }
