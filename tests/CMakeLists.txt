@@ -17,6 +17,10 @@ set(OGG_TEST_LIST
     test_audio_music_playback
 )
 
+set(CFG_TEST_LIST
+    test_config_works
+)
+
 set(JPG_TEST_LIST
     test_display_works
     test_locked_region_cyberpunk
@@ -52,6 +56,10 @@ foreach(test_src ${TEST_SOURCES})
     
     if(test_name IN_LIST OGG_TEST_LIST)
         b_embed(${test_name} "resources/7. Continuity.ogg")
+    endif()
+
+    if(test_name IN_LIST CFG_TEST_LIST)
+        b_embed(${test_name} "resources/config.conf")
     endif()
 
     if(test_name IN_LIST JPG_TEST_LIST)

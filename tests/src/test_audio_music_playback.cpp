@@ -17,8 +17,6 @@ int main(int argc, char *argv[]) {
 
     const auto music_embedded = b::embed<"resources/7. Continuity.ogg">();
 
-    al_init();
-
     auto fp = Utility::File::open_mem((void*)music_embedded.data(), music_embedded.length(), "rb");
 
     auto voice = Audio::Voice::create();
