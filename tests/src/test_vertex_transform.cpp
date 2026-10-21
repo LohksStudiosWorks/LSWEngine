@@ -84,11 +84,18 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Setting up perspective and camera..." << std::endl;
 
-    Game::PlayerCamera player(2.0f);
+    Game::PlayerCamera player(Game::PlayerCamera::model::M_3D);
     Game::PlayerPerspective perspective(display);
     auto identity = Graphics::Transform().set_identity();
     
     //camera.use();
+    player
+        .set_gravity({0.0f, -0.0135f, 0.0f})
+        .set_height(2.0f)
+        .set_limits({-1e1f, 0.0f,-1e1f}, {1e1f,1e1f,1e1f})
+        .set_momentum({0.8f, 0.9997f, 0.8f});
+
+    
     player.teleport(0.0f, 0.0f, 0.0f);
     player.teleport_angle(-0.7854f, -0.2f);
     player.calc_apply_camera();
@@ -159,9 +166,13 @@ int main(int argc, char *argv[]) {
             display.set_render_state(ALLEGRO_DEPTH_TEST, 0);
 
             identity.set_identity().use();
-            identity.orthographic(0.0f, 0.0f, -1.0f, 320.0f, 240.0f, 1.0f).use_projection();
+            identity.orthographic(0.0f, 0.0f, -1.0f, 480.0f, 300.0f, 1.0f).use_projection();
 
-            font.draw(al_map_rgb(255,255,255), 2, 2, 0, "%.1lf FPS", fps);
+            font.draw(al_map_rgb(255,255,255), 2, 2, 0, "P: %04.1f %04.1f %04.1f S: %06.3f %06.3f %06.3f",
+                player.get_x(), player.get_y(), player.get_z(),
+                player.get_vx(), player.get_vy(), player.get_vz()
+            );
+            font.draw(al_map_rgb(255,255,255), 2, 10, 0, "%.1lf FPS | %.1f PTPS", fps, player.get_tick_time_secs());
 
             display.flip();
         }
@@ -177,35 +188,47 @@ int main(int argc, char *argv[]) {
             if (ev.timer.source == timed_close) {
                 running = false;
             }
-            if (ev.timer.source == timed_fps_calc) {
+            else if (ev.timer.source == timed_fps_calc) {
                 fps = 1.0 / delta_smooth;
             }
+            else {
+                player.cpu_tick();
 
-            player.cpu_tick();
+                Events::Keyboard key_state;
+                const bool ducked = key_state.get_down(ALLEGRO_KEY_LCTRL);
+                const bool running = key_state.get_down(ALLEGRO_KEY_LSHIFT);
 
-            Events::Keyboard key_state;
+                const float prop =
+                    (ducked 
+                        ? 0.006f
+                        : (running
+                            ? 0.04f
+                            : 0.018f
+                        )
+                    ) * multiplier_speed;
 
-            const float prop = (0.018f + static_cast<float>(key_state.get_down(ALLEGRO_KEY_LSHIFT)) * 0.035f) * multiplier_speed;
+                player.set_height(ducked ? 1.2f : 2.0f);
 
-            if (key_state.get_down(ALLEGRO_KEY_W)) {
-                timed_close.restart();
-                player.walk_towards(0.0f, prop);
-            }
-            if (key_state.get_down(ALLEGRO_KEY_S)) {
-                timed_close.restart();
-                player.walk_towards(0.0f, -prop);
-            }
-            if (key_state.get_down(ALLEGRO_KEY_A)) {
-                timed_close.restart();
-                player.walk_towards(-prop, 0.0f);
-            }
-            if (key_state.get_down(ALLEGRO_KEY_D)) {
-                timed_close.restart();
-                player.walk_towards(prop, 0.0f);
-            }
-            if (key_state.get_down(ALLEGRO_KEY_SPACE) && player.get_y() == 0) {
-                timed_close.restart();
-                player.jump(0.3f);
+                if (key_state.get_down(ALLEGRO_KEY_W)) {
+                    timed_close.restart();
+                    player.walk_towards(0.0f, prop);
+                }
+                if (key_state.get_down(ALLEGRO_KEY_S)) {
+                    timed_close.restart();
+                    player.walk_towards(0.0f, -prop);
+                }
+                if (key_state.get_down(ALLEGRO_KEY_A)) {
+                    timed_close.restart();
+                    player.walk_towards(-prop, 0.0f);
+                }
+                if (key_state.get_down(ALLEGRO_KEY_D)) {
+                    timed_close.restart();
+                    player.walk_towards(prop, 0.0f);
+                }
+                if (key_state.get_down(ALLEGRO_KEY_SPACE) && player.get_y() <= 0.0f) {
+                    timed_close.restart();
+                    player.jump(0.23f);
+                }
             }
         }
             break;

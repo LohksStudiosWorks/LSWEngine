@@ -5,17 +5,46 @@
 namespace LSWE {
 namespace Game {
 
-    PlayerCamera::PlayerCamera(float min_height) 
-        : m_height(min_height)
+    PlayerCamera::PlayerCamera(model model) 
+        : m_model(model)
     {}
+
+    PlayerCamera& PlayerCamera::set_limits(axes lim_min, axes lim_max) {
+        m_limits[0] = lim_min;
+        m_limits[1] = lim_max;
+        return *this;
+    }
+
+    PlayerCamera& PlayerCamera::set_momentum(axes momentum) {
+        m_momentum = momentum;
+        return *this;
+    }
+
+    PlayerCamera& PlayerCamera::set_gravity(axes gravity) {
+        m_gravity = gravity;
+        return *this;
+    }
+
+    PlayerCamera& PlayerCamera::set_height(float height) {
+        m_height = height;
+        return *this;
+    }
+
+    void PlayerCamera::teleport(float x, float y) {
+        cpu_now.x = x;
+        cpu_now.y = y;
+        cpu_now.z = 0;
+        m_movement.x = 0.0f;
+        m_movement.y = 0.0f;
+    }
 
     void PlayerCamera::teleport(float x, float y, float z) {
         cpu_now.x = x;
         cpu_now.y = y; // Ground/feet level
         cpu_now.z = z;
-        m_vx = 0.0f;
-        m_vy = 0.0f;
-        m_vz = 0.0f;
+        m_movement.x = 0.0f;
+        m_movement.y = 0.0f;
+        m_movement.z = 0.0f;
     }
 
     void PlayerCamera::teleport_angle(float yaw, float pitch) {
@@ -28,25 +57,66 @@ namespace Game {
     }
 
     float PlayerCamera::get_x() const {
-        return cpu_now.x;
+        return cpu_last.x;
     }
 
     float PlayerCamera::get_y() const {
-        return cpu_now.y;
+        return cpu_last.y;
     }
 
     float PlayerCamera::get_z() const {
-        return cpu_now.z;
+        return cpu_last.z;
     }
 
-    void PlayerCamera::walk_towards(float x, float z) {
-        const float fx = sin(m_yaw);
-        const float fz = -cos(m_yaw);
-        const float rx = cos(m_yaw);
-        const float rz = sin(m_yaw);
+    float PlayerCamera::get_vx() const {
+        return m_movement_last.x;
+    }
 
-        m_vx += (fx * z + rx * x);
-        m_vz += (fz * z + rz * x);
+    float PlayerCamera::get_vy() const {
+        return m_movement_last.y;
+    }
+
+    float PlayerCamera::get_vz() const {
+        return m_movement_last.z;
+    }
+
+    float PlayerCamera::get_yaw() const {
+        return m_yaw;
+    }
+
+    float PlayerCamera::get_pitch() const {
+        return m_pitch;
+    }
+    
+    float PlayerCamera::get_tick_time_secs() const {
+        return static_cast<float>(1.0 / std::max(m_timing.curr_delta, 1e-20));
+    }
+
+    void PlayerCamera::walk_towards(float side, float forward) {
+        switch(m_model) {
+        case model::M_2D:
+        {
+            m_movement.x += side;
+            m_movement.y += forward;
+        }
+            break;
+        case model::M_3D:
+        {
+            const float fx = sin(m_yaw);
+            const float fz = -cos(m_yaw);
+            const float rx = cos(m_yaw);
+            const float rz = sin(m_yaw);
+
+            m_movement.x += (fx * forward + rx * side);
+            m_movement.z += (fz * forward + rz * side);
+        }
+            break;
+        }
+    }
+
+    void PlayerCamera::move_world_pos(float x, float y) {
+        cpu_now.x += x;
+        cpu_now.y += y;
     }
 
     void PlayerCamera::move_world_pos(float x, float y, float z) {
@@ -65,47 +135,66 @@ namespace Game {
         if (m_pitch < -1.4f) m_pitch = -1.4f;
     }
 
-    void PlayerCamera::jump(float how_much_y) {
-        // Only allow jumping if we are on the ground (cpu_now.y <= 0.0f)
-        if (cpu_now.y <= 0.0f) {
-            m_vy = how_much_y; // Set initial upward velocity impulse
+    void PlayerCamera::jump(float how_much, axis axis) {
+        switch(axis) {
+        case axis::X:
+            m_movement.x = how_much;
+            break;
+        case axis::Y:
+            m_movement.y = how_much;
+            break;
+        case axis::Z:
+            m_movement.z = how_much;
+            break;
         }
     }
 
     void PlayerCamera::cpu_tick() {
-        timing.tick();
+        axes calc{cpu_now};
 
+        m_movement.x = m_movement.x * m_momentum.x + m_gravity.x;
+        m_movement.y = m_movement.y * m_momentum.y + m_gravity.y;
+        m_movement.z = m_movement.z * m_momentum.z + m_gravity.z;
+
+        calc.x += m_movement.x;
+        calc.y += m_movement.y;
+        calc.z += m_movement.z;        
+
+        if (calc.x < m_limits[0].x) { 
+            calc.x = m_limits[0].x;
+            if (m_movement.x < 0.0f) m_movement.x = 0.0f;
+        }
+        if (calc.y < m_limits[0].y) { 
+            calc.y = m_limits[0].y;
+            if (m_movement.y < 0.0f) m_movement.y = 0.0f;
+        }
+        if (calc.z < m_limits[0].z) { 
+            calc.z = m_limits[0].z;
+            if (m_movement.z < 0.0f) m_movement.z = 0.0f;
+        }
+
+        if (calc.x > m_limits[1].x) { 
+            calc.x = m_limits[1].x;
+            if (m_movement.x > 0.0f) m_movement.x = 0.0f;
+        }
+        if (calc.y > m_limits[1].y) { 
+            calc.y = m_limits[1].y;
+            if (m_movement.y > 0.0f) m_movement.y = 0.0f;
+        }
+        if (calc.z > m_limits[1].z) { 
+            calc.z = m_limits[1].z;
+            if (m_movement.z > 0.0f) m_movement.z = 0.0f;
+        }
+
+        m_timing.tick();
         cpu_last = cpu_now;
-
-        if (cpu_now.y > m_min_y || m_vy > 0.0f) {
-            m_vy -= m_gravity_y;
-            cpu_now.y += m_vy;
-        }
-
-        if (m_vx != 0.0f) {
-            cpu_now.x += m_vx;
-            m_vx *= m_resistance_mult_xz;
-            
-            if (fabs(m_vx) < m_min_abs_xz) m_vx = 0;
-        }
-
-        if (m_vz != 0.0f) {
-            cpu_now.z += m_vz;
-            m_vz *= m_resistance_mult_xz;            
-            
-            if (fabs(m_vz) < m_min_abs_xz) m_vz = 0;
-        }
-
-        // Hit the ground check
-        if (cpu_now.y <= m_min_y) {
-            cpu_now.y = 0.0f;
-            m_vy = 0.0f;
-        }
+        cpu_now = calc;
+        m_movement_last = m_movement;
     }
 
     void PlayerCamera::calc_apply_camera() {
-        position draw_pos;
-        const double alpha = timing.get_prop();
+        axes draw_pos;
+        const double alpha = m_timing.get_prop();
 
         draw_pos.x = alpha * cpu_now.x + (1.0 - alpha) * cpu_last.x;
         draw_pos.y = alpha * cpu_now.y + (1.0 - alpha) * cpu_last.y;
