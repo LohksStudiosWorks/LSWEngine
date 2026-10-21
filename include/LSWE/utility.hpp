@@ -12,3 +12,4 @@
 #include <LSWE/utility/text_log.hpp>
 #include <LSWE/utility/menu.hpp>
 #include <LSWE/utility/config.hpp>
+#include <LSWE/utility/state.hpp>

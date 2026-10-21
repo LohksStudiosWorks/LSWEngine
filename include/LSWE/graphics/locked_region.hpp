@@ -1,18 +1,15 @@
 #pragma once
 
 #include <allegro5/allegro5.h>
-#include <allegro5/allegro_image.h>
 
 #include <memory>
-
-#include <LSWE/graphics/bitmap.hpp>
 
 namespace LSWE {
 namespace Graphics {
 
     class LockedRegion {
     public:
-        LockedRegion(Bitmap bmp, int format = ALLEGRO_PIXEL_FORMAT_ANY, int flags = ALLEGRO_LOCK_READWRITE, int pos_x = -1, int pos_y = -1, int width = -1, int height = -1);
+        LockedRegion(ALLEGRO_BITMAP* bmp, int format = ALLEGRO_PIXEL_FORMAT_ANY, int flags = ALLEGRO_LOCK_READWRITE, int pos_x = -1, int pos_y = -1, int width = -1, int height = -1);
 
 		int get_pixel_format_size() const;
 		int get_pixel_format_bits() const;
@@ -29,7 +26,7 @@ namespace Graphics {
 		void put_pixel(const int pos_x, const int pos_y, const ALLEGRO_COLOR color);
 		void put_blended_pixel(const int pos_x, const int pos_y, const ALLEGRO_COLOR color);
     private:
-        Bitmap m_bitmap;
+        ALLEGRO_BITMAP* m_bitmap;
 
         std::shared_ptr<ALLEGRO_LOCKED_REGION> m_locked_region;
     };

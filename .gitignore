@@ -1,6 +1,9 @@
 _old/
 install/
+install-release/
 build/
+build-release/
 example-build/
+example-build-release/
 allegro.log
 trace

@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
 
     Graphics::Display::set_new_window_title("Fancy test");
     auto display = Graphics::Display::create(width, height);
+    auto font = Graphics::Font::create_builtin();
 
     std::cout << "Loading png..." << std::endl;
 
@@ -85,6 +86,7 @@ int main(int argc, char *argv[]) {
 
     Game::PlayerCamera player(2.0f);
     Game::PlayerPerspective perspective(display);
+    auto identity = Graphics::Transform().set_identity();
     
     //camera.use();
     player.teleport(0.0f, 0.0f, 0.0f);
@@ -100,23 +102,36 @@ int main(int argc, char *argv[]) {
     Utility::SingletonOf<Utility::AllegroInitMouse>::instance().setup();
     Utility::SingletonOf<Utility::AllegroInitKeyboard>::instance().setup();
 
-    ALLEGRO_EVENT_QUEUE* evq = al_create_event_queue();
-    ALLEGRO_TIMER* timed_ev = al_create_timer(1.0 / 60);
+    auto evq = Events::EventQueue::create();
+    auto timed_ev = Events::Timer::create(1.0 / 60);
+    auto timed_fps_calc = Events::Timer::create(1.0 / 4);
+    auto timed_close = Events::Timer::create(5.0);
 
-    al_register_event_source(evq, display);
-    al_register_event_source(evq, al_get_mouse_event_source());
-    al_register_event_source(evq, al_get_keyboard_event_source());
-    al_register_event_source(evq, al_get_timer_event_source(timed_ev));
+    evq << display;
+    evq << Events::MouseEventSource();
+    evq << Events::KeyboardEventSource();
+    evq << timed_ev;
+    evq << timed_close;
+    evq << timed_fps_calc;
 
-    al_start_timer(timed_ev);
+    timed_ev.start();
+    timed_close.start();
+    timed_fps_calc.start();
 
     std::cout << "Start." << std::endl;
 
+    double fps = 0.0;
+    double delta_smooth = 1.0;
+    double last_draw = al_get_time() - 1.0 / 60;
+
     for(bool running = true; running;) {
-        while (al_event_queue_is_empty(evq)) {
+        while (evq.get_is_empty()) {
+            display.set_render_state(ALLEGRO_DEPTH_TEST, 1);
+            perspective.build_and_apply();
             player.calc_apply_camera();
-            al_clear_to_color(al_map_rgb(15, 15, 20));
-            al_clear_depth_buffer(1.0f);
+
+            Graphics::Color(15, 15, 20).clear_to_this();
+            display.clear_depth_buffer(1.0f);
 
             vertexes->translate(5.0f, 0.0f, 0.0f);
             vertexes.draw();
@@ -135,12 +150,23 @@ int main(int argc, char *argv[]) {
             vertexes->translate(5.0f, 0.0f, 0.0f);
             vertexes.draw();
             vertexes->translate(-5.0f, 0.0f, 5.0f);
+
+            const double now_s = al_get_time();
+            const double delta_s = now_s - last_draw;
+            last_draw = now_s;
+            delta_smooth = (9.0 * delta_smooth + delta_s) * 0.1;
             
+            display.set_render_state(ALLEGRO_DEPTH_TEST, 0);
+
+            identity.set_identity().use();
+            identity.orthographic(0.0f, 0.0f, -1.0f, 320.0f, 240.0f, 1.0f).use_projection();
+
+            font.draw(al_map_rgb(255,255,255), 2, 2, 0, "%.1lf FPS", fps);
+
             display.flip();
         }
 
-        ALLEGRO_EVENT ev;
-        al_wait_for_event(evq, &ev);
+        ALLEGRO_EVENT ev = evq.wait();
 
         switch (ev.type) {
         case ALLEGRO_EVENT_DISPLAY_CLOSE:
@@ -148,26 +174,37 @@ int main(int argc, char *argv[]) {
             break;
         case ALLEGRO_EVENT_TIMER:
         {
+            if (ev.timer.source == timed_close) {
+                running = false;
+            }
+            if (ev.timer.source == timed_fps_calc) {
+                fps = 1.0 / delta_smooth;
+            }
+
             player.cpu_tick();
 
-            ALLEGRO_KEYBOARD_STATE key_state;
-            al_get_keyboard_state(&key_state);
+            Events::Keyboard key_state;
 
-            const float prop = (0.018f + static_cast<float>(al_key_down(&key_state, ALLEGRO_KEY_LSHIFT)) * 0.035f) * multiplier_speed;
+            const float prop = (0.018f + static_cast<float>(key_state.get_down(ALLEGRO_KEY_LSHIFT)) * 0.035f) * multiplier_speed;
 
-            if (al_key_down(&key_state, ALLEGRO_KEY_W)) {
+            if (key_state.get_down(ALLEGRO_KEY_W)) {
+                timed_close.restart();
                 player.walk_towards(0.0f, prop);
             }
-            if (al_key_down(&key_state, ALLEGRO_KEY_S)) {
+            if (key_state.get_down(ALLEGRO_KEY_S)) {
+                timed_close.restart();
                 player.walk_towards(0.0f, -prop);
             }
-            if (al_key_down(&key_state, ALLEGRO_KEY_A)) {
+            if (key_state.get_down(ALLEGRO_KEY_A)) {
+                timed_close.restart();
                 player.walk_towards(-prop, 0.0f);
             }
-            if (al_key_down(&key_state, ALLEGRO_KEY_D)) {
+            if (key_state.get_down(ALLEGRO_KEY_D)) {
+                timed_close.restart();
                 player.walk_towards(prop, 0.0f);
             }
-            if (al_key_down(&key_state, ALLEGRO_KEY_SPACE) && player.get_y() == 0) {
+            if (key_state.get_down(ALLEGRO_KEY_SPACE) && player.get_y() == 0) {
+                timed_close.restart();
                 player.jump(0.3f);
             }
         }
@@ -182,16 +219,19 @@ int main(int argc, char *argv[]) {
                 display.acknowledge_resize();
                 perspective.build_and_apply();
                 vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+                timed_close.restart();
                 break;
             case ALLEGRO_KEY_R:
                 player.teleport(0.0f, 0.0f, 0.0f);
                 player.teleport_angle(-0.7854f, -0.2f);
+                timed_close.restart();
                 break;
             }
             break;
         case ALLEGRO_EVENT_MOUSE_AXES:
             player.move_angle(- ev.mouse.dx * 0.35f, ev.mouse.dy * 0.35f);
             display.move_mouse(width / 2, height / 2);
+            timed_close.restart();
             break;
         case ALLEGRO_EVENT_DISPLAY_RESIZE:
             display.acknowledge_resize();
@@ -201,9 +241,6 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    al_destroy_timer(timed_ev);
-    al_destroy_event_queue(evq);
-
     std::cout << "PASSED!" << std::endl;
     return 0;
 }

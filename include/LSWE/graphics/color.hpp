@@ -9,6 +9,7 @@ namespace Graphics {
     public:
 		Color() = default;
 		Color(float r, float g, float b, float a = 1.0);
+		Color(int r, int g, int b, int a = 255);
 		Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255);
 
 		float get_r() const;

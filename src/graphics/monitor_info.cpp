@@ -1,7 +1,5 @@
 #include <LSWE/graphics/monitor_info.hpp>
 
-#include <cmath>
-
 #include <LSWE/utility/startup.hpp>
 
 namespace LSWE {

@@ -1,217 +1,235 @@
 #include <LSWE/lswe.hpp>
-#include <iostream>
+#include <battery/embed.hpp>
 
-#include <curl/curl.h>
-#include <nlohmann/json.hpp>
-#include <vector>
-#include <cstdint>
-#include <chrono>
-#include <thread>
-#include <regex>
-#include <memory>
-#include <format>
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
+#include <cmath>
+#include <iostream>
 
 using namespace LSWE;
 
-struct playing {
-    double
-        time_curr;
-    std::string
-        path_now,
-        name_curr,
-        time_curr_str,
-        time_total_str;
-};
+int main(int argc, char *argv[]) {
+    const std::string platform = (argc > 1) ? argv[1] : "Linux";
+    std::cout << "Running test on " << platform << "..." << std::endl;
 
-struct playing_instance {
-    Utility::File file;
-    Audio::Sample sample;
-    Audio::SampleInstance instance;
+    constexpr float cube_side = 0.5f;
+    constexpr size_t cube_len = 36;
+    Graphics::Vertex cube[cube_len]; // aka ALLEGRO_VERTEX[]
 
-    playing_instance(const char* buf, const size_t len)
-        : file(Utility::File::open_mem((void*)buf, len, "r")),
-          sample(Audio::Sample::load(file, ".ogg")),
-          instance(Audio::SampleInstance::create(sample))
-    {}
-};
+    auto set_vert = [&](int index, float x, float y, float z, float u, float v) {
+        cube[index].x = x; cube[index].y = y; cube[index].z = z;
+        cube[index].u = u; cube[index].v = v; cube[index].color = al_map_rgb_f(1.0f, 1.0f, 1.0f); // tint
+    };
+    auto set_face = [&](size_t base_idx, 
+                    float x1, float y1, float z1,
+                    float x2, float y2, float z2,
+                    float x3, float y3, float z3,
+                    float x4, float y4, float z4) {
+        // Triangle 1 (Vertices: 0, 1, 2)
+        set_vert(base_idx + 0, x1, y1, z1, 0.0f,  0.0f);  // Top-Left
+        set_vert(base_idx + 1, x2, y2, z2, 16.0f, 0.0f);  // Top-Right
+        set_vert(base_idx + 2, x3, y3, z3, 16.0f, 16.0f); // Bottom-Right
 
-std::string sec_to_str(uint64_t sec);
-std::string sanitize_url(std::string url);
-playing calculate_now(nlohmann::ordered_json selected);
-std::string sanitize_js_to_json(const std::string& input);
-bool download_from(const char* path, std::string& data);
+        // Triangle 2 (Vertices: 0, 2, 3)
+        set_vert(base_idx + 3, x1, y1, z1, 0.0f,  0.0f);  // Top-Left
+        set_vert(base_idx + 4, x3, y3, z3, 16.0f, 16.0f); // Bottom-Right
+        set_vert(base_idx + 5, x4, y4, z4, 0.0f,  16.0f); // Bottom-Left
+    };
+    {
+        const float& s = cube_side;
+        // 1. Front Face (z = 0.5)
+        set_face(0,  -s,  s, s,   s,  s, s,   s, -s, s,  -s, -s, s);
+        // 2. Back Face (z = -0.5)
+        set_face(6,   s,  s, -s, -s,  s, -s,  -s,-s, -s,   s, -s, -s);
+        // 3. Left Face (x = -0.5)
+        set_face(12, -s,  s, -s, -s,  s,  s,  -s,-s,  s,  -s, -s, -s);
+        // 4. Right Face (x = 0.5)
+        set_face(18,  s,  s,  s,  s,  s, -s,   s,-s, -s,   s, -s,  s);
+        // 5. Top Face (y = 0.5)
+        set_face(24, -s,  s, -s,  s,  s, -s,   s, s,  s,  -s,  s,  s);
+        // 6. Bottom Face (y = -0.5)
+        set_face(30, -s, -s,  s,  s, -s,  s,   s,-s, -s,  -s, -s, -s);
+    }
 
-const std::string original_path = "https://lohkat.github.io/lofi/";
-constexpr char playlist_source_json[] = "https://lohkat.github.io/lofi/js/times.js";
+    std::cout << "Loading PNG data from header..." << std::endl;
 
-int main(int argc, char **argv) {
-    std::cout << "Tunning in..." << std::endl;
+    const auto png_embedded = b::embed<"resources/dirt_block.png">();
+    auto fp = Utility::File::open_mem((void*)png_embedded.data(), png_embedded.length(), "rb");
 
-    auto voice = Audio::Voice::create();
-    auto mixer = Audio::Mixer::create();
+    constexpr float multiplier_speed = 1.0f;
 
-    voice << mixer;
+    const int width = 800;
+    const int height = 600;
 
-    /* Get listing here and parse JS -> JSON -> C++ */
-    std::string buf;
-    if (!download_from(playlist_source_json, buf)) return 1;
+    std::cout << "Setting up display flags..." << std::endl;
 
-    buf = buf.substr(buf.find('['));
-    while(buf.back() != ']') buf.pop_back();
-    buf = sanitize_js_to_json(buf);
+    Graphics::Display::set_new_flags(ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE);
+    Graphics::Display::set_new_option(ALLEGRO_DEPTH_SIZE, 16, ALLEGRO_SUGGEST);
+    Graphics::Display::set_new_option(ALLEGRO_VSYNC, 2, ALLEGRO_SUGGEST);
 
-    auto plist = nlohmann::ordered_json::parse(buf);
-    auto chosen = plist[0];
+    std::cout << "Creating display..." << std::endl;
 
-    std::cout << "Got links, thinking..." << std::endl;
+    Graphics::Display::set_new_window_title("Fancy test");
+    auto display = Graphics::Display::create(width, height);
+    auto font = Graphics::Font::create_builtin();
 
-    using player = std::pair<std::string, std::unique_ptr<playing_instance>>;
+    std::cout << "Loading png..." << std::endl;
 
-    player plays;
+    auto bitmap = Graphics::Bitmap::load(fp, ".png");
+
+    std::cout << "Setting up cursor and flags..." << std::endl;
+
+    display.hide_cursor();
+    display.set_render_state(ALLEGRO_DEPTH_TEST, 1);
+
+    std::cout << "Setting up perspective and camera..." << std::endl;
+
+    Game::PlayerCamera player(2.0f);
+    Game::PlayerPerspective perspective(display);
+    auto identity = Graphics::Transform().set_identity();
     
-    while(1) {
-        playing play = calculate_now(chosen);
+    //camera.use();
+    player.teleport(0.0f, 0.0f, 0.0f);
+    player.teleport_angle(-0.7854f, -0.2f);
+    player.calc_apply_camera();
+    perspective.set_fov(120.0f);
+    perspective.build_and_apply();
 
-        if (play.path_now != plays.first) {
-            plays.first = play.path_now;
-            if (plays.second) {
-                plays.second->instance.stop();
-                plays.second.reset();
-            }
-            if (!download_from(sanitize_url(plays.first).c_str(), buf)) {
-                std::cout << "\nFail loading from '" << plays.first << "'. Trying again..." << std::endl;
-                plays.first.clear();
-            }
-            else {
-                plays.second = std::make_unique<playing_instance>(buf.data(), buf.size());
-                mixer << plays.second->instance;
-                plays.second->instance.set_position(plays.second->sample.get_frequency() * play.time_curr);
-                plays.second->instance.play();
-            }
+    std::cout << "Loading vertex buffer..." << std::endl;
+
+    auto vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+
+    Utility::SingletonOf<Utility::AllegroInitMouse>::instance().setup();
+    Utility::SingletonOf<Utility::AllegroInitKeyboard>::instance().setup();
+
+    auto evq = Events::EventQueue::create();
+    auto timed_ev = Events::Timer::create(1.0 / 60);
+    auto timed_fps_calc = Events::Timer::create(1.0 / 4);
+
+    evq << display;
+    evq << Events::MouseEventSource();
+    evq << Events::KeyboardEventSource();
+    evq << timed_ev;
+    evq << timed_fps_calc;
+
+    timed_ev.start();
+    timed_fps_calc.start();
+
+    std::cout << "Start." << std::endl;
+
+    double fps = 0.0;
+    double delta_smooth = 1.0;
+    double last_draw = al_get_time() - 1.0 / 60;
+
+    for(bool running = true; running;) {
+        while (evq.get_is_empty()) {
+            display.set_render_state(ALLEGRO_DEPTH_TEST, 1);
+            perspective.build_and_apply();
+            player.calc_apply_camera();
+
+            Graphics::Color(15, 15, 20).clear_to_this();
+            display.clear_depth_buffer(1.0f);
+
+            vertexes->translate(5.0f, 0.0f, 0.0f);
+            vertexes.draw();
+            vertexes->translate(0.0f, 0.0f, 5.0f);
+            vertexes.draw();
+            vertexes->translate(-5.0f, 0.0f, 0.0f);
+            vertexes.draw();
+            vertexes->translate(-5.0f, 0.0f, 0.0f);
+            vertexes.draw();
+            vertexes->translate(0.0f, 0.0f, -5.0f);
+            vertexes.draw();
+            vertexes->translate(0.0f, 0.0f, -5.0f);
+            vertexes.draw();
+            vertexes->translate(5.0f, 0.0f, 0.0f);
+            vertexes.draw();
+            vertexes->translate(5.0f, 0.0f, 0.0f);
+            vertexes.draw();
+            vertexes->translate(-5.0f, 0.0f, 5.0f);
+
+            const double now_s = al_get_time();
+            const double delta_s = now_s - last_draw;
+            last_draw = now_s;
+            delta_smooth = (9.0 * delta_smooth + delta_s) * 0.1;
+            
+            display.set_render_state(ALLEGRO_DEPTH_TEST, 0);
+
+            identity.set_identity().use();
+            identity.orthographic(0.0f, 0.0f, -1.0f, 320.0f, 240.0f, 1.0f).use_projection();
+
+            font.draw(al_map_rgb(255,255,255), 2, 2, 0, "%.1lf FPS", fps);
+
+            display.flip();
         }
 
-        std::cout << "\r" << play.time_total_str << " :: " << play.name_curr << " :: " << play.time_curr_str;
-        std::cout << std::flush;
+        ALLEGRO_EVENT ev = evq.wait();
 
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        switch (ev.type) {
+        case ALLEGRO_EVENT_DISPLAY_CLOSE:
+            running = false;
+            break;
+        case ALLEGRO_EVENT_TIMER:
+        {
+            if (ev.timer.source == timed_fps_calc) {
+                fps = 1.0 / delta_smooth;
+            }
+
+            player.cpu_tick();
+
+            Events::Keyboard key_state;
+
+            const float prop = (0.018f + static_cast<float>(key_state.get_down(ALLEGRO_KEY_LSHIFT)) * 0.035f) * multiplier_speed;
+
+            if (key_state.get_down(ALLEGRO_KEY_W)) {
+                player.walk_towards(0.0f, prop);
+            }
+            if (key_state.get_down(ALLEGRO_KEY_S)) {
+                player.walk_towards(0.0f, -prop);
+            }
+            if (key_state.get_down(ALLEGRO_KEY_A)) {
+                player.walk_towards(-prop, 0.0f);
+            }
+            if (key_state.get_down(ALLEGRO_KEY_D)) {
+                player.walk_towards(prop, 0.0f);
+            }
+            if (key_state.get_down(ALLEGRO_KEY_SPACE) && player.get_y() == 0) {
+                player.jump(0.3f);
+            }
+        }
+            break;
+        case ALLEGRO_EVENT_KEY_UP:
+            switch(ev.keyboard.keycode) {
+            case ALLEGRO_KEY_ESCAPE:
+                running = false;
+                break;
+            case ALLEGRO_KEY_F11:
+                display.set_flag(ALLEGRO_FULLSCREEN_WINDOW, !(display.get_flags() & ALLEGRO_FULLSCREEN_WINDOW));
+                display.acknowledge_resize();
+                perspective.build_and_apply();
+                vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+                break;
+            case ALLEGRO_KEY_R:
+                player.teleport(0.0f, 0.0f, 0.0f);
+                player.teleport_angle(-0.7854f, -0.2f);
+                break;
+            }
+            break;
+        case ALLEGRO_EVENT_MOUSE_AXES:
+            player.move_angle(- ev.mouse.dx * 0.35f, ev.mouse.dy * 0.35f);
+            display.move_mouse(width / 2, height / 2);
+            break;
+        case ALLEGRO_EVENT_DISPLAY_RESIZE:
+            display.acknowledge_resize();
+            perspective.build_and_apply();
+            vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+            break;
+        }
     }
     
+    std::cout << "PASSED!" << std::endl;
     return 0;
 }
 
-std::string sec_to_str(uint64_t orig) {
-    const uint64_t secs = orig % 60;
-    orig /= 60;
-    const uint64_t mins = orig % 60;
-    orig /= 60;
-    const uint64_t hour = orig;
-
-    return std::format("{:02}:{:02}:{:02}", hour, mins, secs);
-}
-
-std::string sanitize_url(std::string url) {
-    size_t pos = 0;
-    while ((pos = url.find(" ", pos)) != std::string::npos) {
-        url.replace(pos, 1, "%20");
-        pos += 3; // Move past the newly inserted "%20"
-    }
-    return url;
-}
-
-playing calculate_now(nlohmann::ordered_json selected) {
-    // 1. Get precise floating-point seconds (matches JS Number(new Date()) * 0.001)
-    double time_now = std::chrono::duration<double>(
-        std::chrono::system_clock::now().time_since_epoch()
-    ).count();
-
-    const int64_t factor = 11987;
-
-    // 2. Divide by a float (1000.0) to prevent integer truncation
-    double total_time_sec = selected["total_time"].get<int64_t>() / 1000.0;
-
-    // 3. Use std::fmod for floating-point modulo instead of %
-    double time_full = std::fmod(time_now, total_time_sec);
-    
-    double show_time = 0;
-    int64_t idx = 0;
-
-    const auto tracks = selected["tracks"];
-
-    for(int64_t i = 0; i < tracks.size(); ++i) {
-        idx = (factor + idx) % tracks.size();
-
-        // The rest of your logic remains exactly the same
-        double track_time = static_cast<double>(tracks[idx][1].get<int64_t>()) * 0.001;
-        if (time_full > track_time) {
-            time_full -= track_time;
-            show_time += track_time;
-        }
-        else break;
-    }
-
-    const std::string raw_name = tracks[idx][0].get<std::string>();
-
-    constexpr char expected_beg_str[] = "tracks/lofi/";
-    constexpr size_t expected_off = std::strlen(expected_beg_str);
-
-    std::string name = raw_name.substr(expected_off);
-    name = name.size() > 4 ? name.substr(0, name.size() - 4) : "ERR";
 
 
-    return playing {
-        .time_curr = time_full,
-        .path_now = original_path + raw_name,
-        .name_curr = name,
-        .time_curr_str = sec_to_str(time_full),
-        .time_total_str = sec_to_str(show_time + time_full)
-    };
-}
-
-std::string sanitize_js_to_json(const std::string& input) {
-    // 1. Wrap unquoted keys in double quotes.
-    // Matches '{' or ',' followed by whitespace, an identifier, optional space, and ':'
-    std::regex key_regex(R"(([{},]\s*)([a-zA-Z_]\w*)\s*:)");
-    std::string cur_str = std::regex_replace(input, key_regex, "$1\"$2\":");
-
-    // 2. Remove trailing commas. 
-    // Your example has them (e.g., after the last array item), but strict JSON 
-    // and nlohmann::ordered_json will throw a parse error if they are left in.
-    std::regex trailing_comma(R"(,(\s*[\]}]))");
-    cur_str = std::regex_replace(cur_str, trailing_comma, "$1");
-
-    return cur_str;
-}
-
-static size_t __WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
-    size_t total_size = size * nmemb;
-    auto* buffer = static_cast<std::string*>(userp);
-    
-    auto* data_ptr = static_cast<uint8_t*>(contents);
-    buffer->insert(buffer->end(), data_ptr, data_ptr + total_size);
-    
-    return total_size;
-}
-
-bool download_from(const char* path, std::string& data) {
-    CURL* curl = curl_easy_init();
-    if (!curl) { return false; }
-
-    data.clear();
-
-    curl_easy_setopt(curl, CURLOPT_URL, path);
-    
-    // Follow HTTP redirects (301, 302, etc.)
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    
-    // Hook up the callback and pass the vector's address as user data
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, __WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
-
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "LSWE-Example/1.0");
-
-    CURLcode res = curl_easy_perform(curl);
-    
-    curl_easy_cleanup(curl);
-
-    return (res == CURLE_OK);
-}

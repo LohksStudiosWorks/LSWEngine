@@ -2,8 +2,6 @@
 
 #include <allegro5/allegro5.h>
 
-#include <memory>
-
 namespace LSWE {
 namespace Graphics {
     

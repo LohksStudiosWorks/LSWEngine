@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
         SingletonOf<AllegroInitImage>::instance().setup();
         SingletonOf<AllegroInitFont>::instance().setup();
         SingletonOf<AllegroInitTTF>::instance().setup();
+        SingletonOf<AllegroInitVideo>::instance().setup();
         SingletonOf<AllegroInitDialog>::instance().setup();
 
         if (platform != "Windows") {

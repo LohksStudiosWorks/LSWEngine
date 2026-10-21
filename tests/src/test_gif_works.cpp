@@ -25,7 +25,6 @@ int main(int argc, char *argv[]) {
     font.draw(al_map_rgb(235,235,235), (display.get_width() - s_width) / 2, (display.get_height() - s_height) / 2, 0, loading_str);
     display.flip();
 
-
     auto bitmap = Graphics::GIF::load(fp);
 
     const float scales[2] = {

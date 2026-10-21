@@ -6,13 +6,13 @@
 namespace LSWE {
 namespace Graphics {
 
-    LockedRegion::LockedRegion(Bitmap bmp, int format, int flags, int pos_x, int pos_y, int width, int height)
-        : m_bitmap(bmp)
+    LockedRegion::LockedRegion(ALLEGRO_BITMAP* bmp, int format, int flags, int pos_x, int pos_y, int width, int height)
+		: m_bitmap(bmp)
     {
         if (pos_x < 0) pos_x = 0;
         if (pos_y < 0) pos_y = 0;
-        if (width < 0) width = m_bitmap.get_width() - pos_x;
-        if (height< 0) height= m_bitmap.get_height()- pos_y;
+        if (width < 0) width = al_get_bitmap_width(m_bitmap) - pos_x;
+        if (height< 0) height= al_get_bitmap_height(m_bitmap)- pos_y;
 
         m_locked_region = std::shared_ptr<ALLEGRO_LOCKED_REGION>(
             al_lock_bitmap_region(bmp, pos_x, pos_y, width, height, format, flags),

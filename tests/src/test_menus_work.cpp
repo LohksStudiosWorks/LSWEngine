@@ -47,19 +47,20 @@ int main(int argc, char *argv[]) {
     const auto& menu = disp.get_own_menu().value();
     const auto& menu_popup = disp.get_own_popup_menu().value();
 
-    ALLEGRO_EVENT_QUEUE* ev_qu = al_create_event_queue();
-    ALLEGRO_TIMER* tm = al_create_timer(10.0);
-    al_register_event_source(ev_qu, disp);
-    al_register_event_source(ev_qu, disp.get_own_menu().value());
-    al_register_event_source(ev_qu, disp.get_own_popup_menu().value());
-    al_register_event_source(ev_qu, al_get_timer_event_source(tm));
-    al_register_event_source(ev_qu, al_get_mouse_event_source());
+    auto ev_qu = Events::EventQueue::create();
+    auto tm = Events::Timer::create(10.0);
 
-    al_start_timer(tm);
+    ev_qu << disp;
+    ev_qu << disp.get_own_menu().value();
+    ev_qu << disp.get_own_popup_menu().value();
+    ev_qu << tm;
+    ev_qu << Events::MouseEventSource();
+
+    tm.start();
     
     while(1) {
-        ALLEGRO_EVENT ev;
-        al_wait_for_event(ev_qu, &ev);
+        ALLEGRO_EVENT ev = ev_qu.wait();
+        
         if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE || ev.type == ALLEGRO_EVENT_TIMER)
             break;
 
@@ -108,9 +109,6 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-
-    al_destroy_timer(tm);
-    al_destroy_event_queue(ev_qu);
 
     return 0;
 };

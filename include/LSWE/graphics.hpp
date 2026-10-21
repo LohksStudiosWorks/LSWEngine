@@ -2,6 +2,7 @@
 
 #include <LSWE/graphics/color.hpp>
 #include <LSWE/graphics/bitmap.hpp>
+#include <LSWE/graphics/display_mode.hpp>
 #include <LSWE/graphics/display.hpp>
 #include <LSWE/graphics/font.hpp>
 #include <LSWE/graphics/gif.hpp>

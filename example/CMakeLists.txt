@@ -5,8 +5,9 @@ project(lswe-example LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include (cmake/installLibCurl.cmake)
-include (cmake/installJson.cmake)
+#include (cmake/installLibCurl.cmake)
+#include (cmake/installJson.cmake)
+include (cmake/installBatteryEmbed.cmake)
 
 find_package(lsw-engine REQUIRED)
 
@@ -18,9 +19,11 @@ message(STATUS "Includes: ${INCLUDES}")
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         lswe::lsw-engine
-        nlohmann_json::nlohmann_json
-        libcurl
+#        nlohmann_json::nlohmann_json
+#        libcurl
 )
+
+b_embed(${PROJECT_NAME} "resources/dirt_block.png")
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
