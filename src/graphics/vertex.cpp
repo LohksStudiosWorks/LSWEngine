@@ -6,6 +6,12 @@
 namespace LSWE {
 namespace Graphics {
 
+    Vertex::Vertex()
+        : ALLEGRO_VERTEX({0, 0, 0, 0, 0, al_map_rgb(255,255,255)}) 
+    {
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+    }
+
     Vertex::Vertex(float x, float y, ALLEGRO_COLOR c)
         : ALLEGRO_VERTEX({x, y, 0, 0, 0, c})
     {}
@@ -17,13 +23,204 @@ namespace Graphics {
     Vertex::Vertex(float x, float y, float z, float u, float v, ALLEGRO_COLOR c)
         : ALLEGRO_VERTEX({x, y, z, u, v, c})
     {}
+    
+    // VertexDecl:
+
+    VertexDecl::VertexDecl(const ALLEGRO_VERTEX_ELEMENT* elements, int size_stride) {
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+
+        m_decl = std::shared_ptr<ALLEGRO_VERTEX_DECL>(
+            al_create_vertex_decl(elements, size_stride),
+            al_destroy_vertex_decl
+        );
+    }
+
+    VertexDecl::operator ALLEGRO_VERTEX_DECL*() const {
+        return m_decl.get();
+    }
+
+    // IndexBuffer:
+
+    IndexBuffer::IndexBuffer(int index_size, const char* initial_data, int num_indices, int flags) {
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+
+        m_index_buffer = std::shared_ptr<ALLEGRO_INDEX_BUFFER>(
+            al_create_index_buffer(index_size, initial_data, num_indices, flags)  ,
+            al_destroy_index_buffer
+        );
+    }
+
+    void* IndexBuffer::lock(int offset, int length, int flags) { 
+        return al_lock_index_buffer(m_index_buffer.get(), offset, length, flags);
+    }
+
+    void IndexBuffer::unlock() { 
+        al_unlock_index_buffer(m_index_buffer.get());
+    }
+
+    int IndexBuffer::size() const { 
+        return al_get_index_buffer_size(m_index_buffer.get());
+    }
+
+    IndexBuffer::operator ALLEGRO_INDEX_BUFFER*() const { 
+        return m_index_buffer.get();
+    }
+
+    // VertexArrayType:
+
+    VertexArrayType::VertexArrayType(int type, std::optional<Bitmap> bitmap)
+        : m_bitmap(bitmap), m_type(type)
+    {}
+    
+    int VertexArrayType::get_type() const {
+        return m_type;
+    }
+
+    std::optional<Bitmap> VertexArrayType::get_bitmap() const {
+        return m_bitmap;
+    }
+
+    void VertexArrayType::set_type(int type) {
+        m_type = type;
+    }
+
+    void VertexArrayType::set_bitmap(Bitmap bitmap) {
+        m_bitmap = bitmap;
+    }
+
+    void VertexArrayType::unset_bitmap() {
+        m_bitmap = std::nullopt;
+    }
+
+    // VertexVector:
+
+    VertexVector::VertexVector(std::vector<Vertex> vertexes, int type, std::optional<Bitmap> bitmap)
+        : VertexArrayType(type, bitmap), m_vertexes(vertexes)
+    {}
+
+    void VertexVector::recreate(std::vector<Vertex> vertexes, int type, std::optional<Bitmap> bitmap) {
+        m_vertexes = vertexes;
+        set_type(type);
+        if (bitmap.has_value()) set_bitmap(bitmap.value());
+        else unset_bitmap();
+    }
+    
+    int VertexVector::draw(int start, int end, const ALLEGRO_VERTEX_DECL* decl) const {
+        return al_draw_prim(
+            m_vertexes.data(),
+            decl,
+            m_bitmap.has_value() ? m_bitmap.value() : nullptr,
+            start < 0 ? 0 : start,
+            end < 0 ? static_cast<int>(m_vertexes.size()) : end,
+            m_type
+        );
+    }
+
+    int VertexVector::draw(const int* indices, int num_vtx, const ALLEGRO_VERTEX_DECL* decl) const {
+        return al_draw_indexed_prim(
+            m_vertexes.data(),
+            decl,
+            m_bitmap.has_value() ? m_bitmap.value() : nullptr,
+            indices,
+            num_vtx,
+            m_type
+        );
+    }
+
+    // VertexBuffer:
+
+    VertexBuffer::VertexBuffer(std::span<Vertex> vertexes, int type, int flags, std::optional<Bitmap> bitmap, ALLEGRO_VERTEX_DECL* decl)
+        : VertexArrayType(type, bitmap), m_buffer(al_create_vertex_buffer(
+            decl,
+            vertexes.data(),
+            vertexes.size(),
+            flags
+        ), al_destroy_vertex_buffer)
+    {}
+    
+    void VertexBuffer::recreate(std::span<Vertex> vertexes, int type, int flags, std::optional<Bitmap> bitmap, ALLEGRO_VERTEX_DECL* decl) {
+        m_buffer = std::shared_ptr<ALLEGRO_VERTEX_BUFFER>(al_create_vertex_buffer(
+            decl,
+            vertexes.data(),
+            vertexes.size(),
+            flags
+        ), al_destroy_vertex_buffer);
+        set_type(type);
+        if (bitmap.has_value()) set_bitmap(bitmap.value());
+        else unset_bitmap();
+    }
+
+    void* VertexBuffer::lock(int offset, int length, int flags) {
+        return al_lock_vertex_buffer(m_buffer.get(), offset, length, flags);
+    }
+
+    void VertexBuffer::unlock() {
+        return al_unlock_vertex_buffer(m_buffer.get());
+    }
+
+    int VertexBuffer::size() const {
+        return al_get_vertex_buffer_size(m_buffer.get());
+    }
+
+    int VertexBuffer::draw(int start, int end, const ALLEGRO_VERTEX_DECL* decl) const {
+        return al_draw_vertex_buffer(
+            m_buffer.get(),
+            m_bitmap.has_value() ? m_bitmap.value() : nullptr,
+            start < 0 ? 0 : start,
+            end < 0 ? size() : end,
+            m_type
+        );
+    }
+
+    int VertexBuffer::draw(ALLEGRO_INDEX_BUFFER* index_buffer, int start, int end) const {
+        return al_draw_indexed_buffer(
+            m_buffer.get(),
+            m_bitmap.has_value() ? m_bitmap.value() : nullptr,
+            index_buffer,
+            start < 0 ? 0 : start,
+            end < 0 ? size() : end,
+            m_type
+        );
+    }
+
+
+
+
+
+
+
+
+
+
+    /*VertexArray VertexArray::create(std::span<Vertex> vertexes, type type) {
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+
+        return VertexArray(
+            vertex_copy_vector(vertexes.begin(), vertexes.end()),
+            type
+        );
+    }
+
+    VertexArray VertexArray::create_on_gpu(std::span<Vertex> vertexes, type type, int flags) {
+        Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
+     
+        return VertexArray(al_create_vertex_buffer(
+            nullptr,
+            vertexes.data(),
+            vertexes.size(),
+            flags
+        ), vertexes.size(), type);
+    }
+
+
+
 
     Vertexes Vertexes::create(std::span<Vertex> vertexes, type type, int flags, std::optional<Bitmap> texture) {
         Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
 
         const ALLEGRO_VERTEX* vertex_data = vertexes.data();
         
-        return Vertexes(generate_gpu_buffer(            
+        return Vertexes(generate_gpu_buffer(
             vertex_data,
             vertexes.size(),
             flags
@@ -135,6 +332,6 @@ namespace Graphics {
             len,
             flags
         );   
-    }
+    }*/
 } // namespace Graphics
 } // namespace LSWE

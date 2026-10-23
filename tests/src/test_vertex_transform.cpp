@@ -104,7 +104,9 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Loading vertex buffer..." << std::endl;
 
-    auto vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+    auto vertex_buffer = Graphics::VertexBuffer(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
+    auto drawable = Game::DrawableObject(vertex_buffer);
+    //auto vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
 
     Utility::SingletonOf<Utility::AllegroInitMouse>::instance().setup();
     Utility::SingletonOf<Utility::AllegroInitKeyboard>::instance().setup();
@@ -140,23 +142,23 @@ int main(int argc, char *argv[]) {
             Graphics::Color(15, 15, 20).clear_to_this();
             display.clear_depth_buffer(1.0f);
 
-            vertexes->translate(5.0f, 0.0f, 0.0f);
-            vertexes.draw();
-            vertexes->translate(0.0f, 0.0f, 5.0f);
-            vertexes.draw();
-            vertexes->translate(-5.0f, 0.0f, 0.0f);
-            vertexes.draw();
-            vertexes->translate(-5.0f, 0.0f, 0.0f);
-            vertexes.draw();
-            vertexes->translate(0.0f, 0.0f, -5.0f);
-            vertexes.draw();
-            vertexes->translate(0.0f, 0.0f, -5.0f);
-            vertexes.draw();
-            vertexes->translate(5.0f, 0.0f, 0.0f);
-            vertexes.draw();
-            vertexes->translate(5.0f, 0.0f, 0.0f);
-            vertexes.draw();
-            vertexes->translate(-5.0f, 0.0f, 5.0f);
+            drawable->translate(5.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(0.0f, 0.0f, 5.0f);
+            drawable.draw();
+            drawable->translate(-5.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(-5.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(0.0f, 0.0f, -5.0f);
+            drawable.draw();
+            drawable->translate(0.0f, 0.0f, -5.0f);
+            drawable.draw();
+            drawable->translate(5.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(5.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(-5.0f, 0.0f, 5.0f);
 
             const double now_s = al_get_time();
             const double delta_s = now_s - last_draw;
@@ -241,7 +243,7 @@ int main(int argc, char *argv[]) {
                 display.set_flag(ALLEGRO_FULLSCREEN_WINDOW, !(display.get_flags() & ALLEGRO_FULLSCREEN_WINDOW));
                 display.acknowledge_resize();
                 perspective.build_and_apply();
-                vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+                vertex_buffer.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
                 timed_close.restart();
                 break;
             case ALLEGRO_KEY_R:
@@ -259,7 +261,7 @@ int main(int argc, char *argv[]) {
         case ALLEGRO_EVENT_DISPLAY_RESIZE:
             display.acknowledge_resize();
             perspective.build_and_apply();
-            vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+            vertex_buffer.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
             break;
         }
     }
