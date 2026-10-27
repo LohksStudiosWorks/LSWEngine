@@ -39,11 +39,19 @@ namespace Game {
         void walk_towards(float side, float forward);
         void move_world_pos(float x, float y);
         void move_world_pos(float x, float y, float z);
+        void world_block_move_towards(float x, float y);
+        void world_block_move_towards(float x, float y, float z);
+
+        void world_block_move_towards_x(float x);
+        void world_block_move_towards_y(float y);
+        void world_block_move_towards_z(float z);
+
         void move_angle(float horizontal, float vertical);
 
         void jump(float how_much, axis axis = axis::Y);
 
         void cpu_tick();
+        const axes& get_world_coords() const;
 
         void calc_apply_camera();
     private:

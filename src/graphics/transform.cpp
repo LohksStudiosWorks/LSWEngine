@@ -52,6 +52,11 @@ namespace Graphics {
         return *this;
     }
 
+    Transform& Transform::invert_3d() {
+        al_invert_transform_3d(m_transform.get());
+        return *this;
+    }
+
     Transform& Transform::transpose() {
         al_transpose_transform(m_transform.get());
         return *this;
@@ -128,6 +133,10 @@ namespace Graphics {
     }
 
     int Transform::check_inverse(float tol) const {
+        return al_check_inverse(m_transform.get(), tol);
+    }
+
+    int Transform::check_inverse_3d(float tol) const {
         return al_check_inverse(m_transform.get(), tol);
     }
 

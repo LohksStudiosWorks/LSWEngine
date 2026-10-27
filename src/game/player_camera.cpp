@@ -125,6 +125,37 @@ namespace Game {
         cpu_now.z += z;
     }
 
+    void PlayerCamera::world_block_move_towards(float x, float y) {
+        cpu_now.x += x;
+        cpu_now.y += y;
+        if (m_movement.x * x < 0.0f) m_movement.x = 0.0f;
+        if (m_movement.y * y < 0.0f) m_movement.y = 0.0f;
+    }
+
+    void PlayerCamera::world_block_move_towards(float x, float y, float z) {
+        cpu_now.x += x;
+        cpu_now.y += y;
+        cpu_now.z += z;
+        if (m_movement.x * x < 0.0f) m_movement.x = 0.0f;
+        if (m_movement.y * y < 0.0f) m_movement.y = 0.0f;
+        if (m_movement.z * z < 0.0f) m_movement.z = 0.0f;
+    }
+
+    void PlayerCamera::world_block_move_towards_x(float x) {
+        cpu_now.x += x;
+        if (m_movement.x * x < 0.0f) m_movement.x = 0.0f;
+    }
+
+    void PlayerCamera::world_block_move_towards_y(float y) {
+        cpu_now.y += y;
+        if (m_movement.y * y < 0.0f) m_movement.y = 0.0f;
+    }
+
+    void PlayerCamera::world_block_move_towards_z(float z) {
+        cpu_now.z += z;
+        if (m_movement.z * z < 0.0f) m_movement.z = 0.0f;
+    }    
+
     void PlayerCamera::move_angle(float horizontal, float vertical) {
         constexpr float sensitivity = 0.003f;
 
@@ -132,7 +163,7 @@ namespace Game {
         m_pitch -= vertical * sensitivity;
 
         if (m_pitch >  1.4f) m_pitch =  1.4f;
-        if (m_pitch < -1.4f) m_pitch = -1.4f;
+        if (m_pitch < - ALLEGRO_PI / 2.01f) m_pitch = - ALLEGRO_PI / 2.01f;
     }
 
     void PlayerCamera::jump(float how_much, axis axis) {

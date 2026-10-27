@@ -12,10 +12,10 @@ message(STATUS "Fetching Allegro 5...")
 
 FetchContent_Declare(
     allegro5
-    #GIT_REPOSITORY https://github.com/LohksStudiosWorks/allegro5.git
-    #GIT_TAG        master
-    GIT_REPOSITORY https://github.com/liballeg/allegro5.git
+    GIT_REPOSITORY https://github.com/LohksStudiosWorks/allegro5.git
     GIT_TAG        master
+    #GIT_REPOSITORY https://github.com/liballeg/allegro5.git
+    #GIT_TAG        master
     
 )
 

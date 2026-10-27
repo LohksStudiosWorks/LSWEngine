@@ -28,6 +28,7 @@ set(JPG_TEST_LIST
 
 set(PNG_TEST_LIST
     test_vertex_transform
+    test_object_collision
 )
 
 set(GIF_TEST_LIST
