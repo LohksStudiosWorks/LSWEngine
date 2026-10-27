@@ -25,7 +25,7 @@ namespace Events {
     }
 
     bool Keyboard::set_leds(int leds) {
-        al_set_keyboard_leds(leds);
+        return al_set_keyboard_leds(leds);
     }
 
     const ALLEGRO_KEYBOARD_STATE& Keyboard::get_state() const {

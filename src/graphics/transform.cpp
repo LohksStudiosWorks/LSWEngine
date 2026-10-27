@@ -136,10 +136,6 @@ namespace Graphics {
         return al_check_inverse(m_transform.get(), tol);
     }
 
-    int Transform::check_inverse_3d(float tol) const {
-        return al_check_inverse(m_transform.get(), tol);
-    }
-
     void Transform::transform_coordinates(float& x, float& y) const {
         al_transform_coordinates(m_transform.get(), &x, &y);
     }

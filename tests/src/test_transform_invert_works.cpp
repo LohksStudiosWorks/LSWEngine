@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     const std::string platform = (argc > 1) ? argv[1] : "Linux";
     std::cout << "Running test on " << platform << "..." << std::endl;
 
-    constexpr float epsilon = 1.0e-7f;
+    constexpr float epsilon = 2.5e-4f;
 
     auto random_transform = Graphics::Transform()
         .rotate(0.7f, 0.3f, 0.1f, 1.2345f)
@@ -24,10 +24,19 @@ int main(int argc, char *argv[]) {
     auto composed = random_transform.clone();
     composed.compose(inverse_test);
 
-    if (composed.check_inverse_3d(epsilon) != 1) {
-        std::cerr << "FAILED!" << std::endl;
-        return 1;
+    const ALLEGRO_TRANSFORM* raw = composed;
+
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            float expected = (i == j) ? 1.0f : 0.0f;
+
+            if (const float diff = fabsf(raw->m[i][j] - expected); diff > epsilon) {
+                std::cout << "ERROR @ " << i << "," << j << ": Diff=" << diff << " > " << epsilon << std::endl;
+                return 1;
+            }
+        }
     }
+
 
     std::cout << "PASSED!" << std::endl;
     return 0;

@@ -42,7 +42,6 @@ namespace Graphics {
         Transform& compose(ALLEGRO_TRANSFORM* transform);
 
         int check_inverse(float tol) const;
-        int check_inverse_3d(float tol) const;
 
         void transform_coordinates(float& x, float& y) const;
         void transform_coordinates(float& x, float& y, float& z) const;
