@@ -3,7 +3,6 @@
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
-#include <cmath>
 #include <iostream>
 
 using namespace LSWE;
@@ -92,7 +91,7 @@ int main(int argc, char *argv[]) {
     player
         .set_gravity({0.0f, -0.0135f, 0.0f})
         .set_height(2.0f)
-        .set_limits({-1e1f, 0.0f,-1e1f}, {1e1f,1e1f,1e1f})
+        .set_limits({-1e1f, -1.0f,-1e1f}, {1e1f,1e1f,1e1f})
         .set_momentum({0.8f, 0.9997f, 0.8f});
 
     
@@ -108,12 +107,35 @@ int main(int argc, char *argv[]) {
     auto drawable = Game::DrawableObject(vertex_buffer);
     bool was_grounded = false;
 
-    auto static_object = Game::StaticObject();
-    auto static_object2 = Game::StaticObject(Graphics::Color(255,125,25));
-    auto static_object3 = Game::StaticObject(Graphics::Color(125,255,25));
 
-    static_object2.make_transform([](Graphics::Transform& t){ t.scale(2.5f, 2.0f, 2.5f); });
-    static_object3.make_transform([](Graphics::Transform& t){
+    auto new_player = Game::DynamicEntity();
+    auto new_player_view = Game::DrawableDynamicEntity(new_player);
+
+    new_player.modify_gravity().y = -0.0002f;
+    new_player.modify_momentum() = { 0.9999f, 0.999f, 0.9999f };
+    new_player.combine_speed({-0.005f, 0.015f, -0.005f});
+
+
+    auto floor_object = Game::Object();
+    auto draw_floor = Game::DrawableStaticObject(floor_object);
+    draw_floor.set_color(Graphics::Color(0, 255, 0)).set_hit_color(Graphics::Color(125, 255, 0));
+
+    auto static_object = Game::Object();
+    auto draw_static_object = Game::DrawableStaticObject(static_object);
+    auto static_object2 = Game::Object(); //Graphics::Color(255,125,25));
+    auto draw_static_object2 = Game::DrawableStaticObject(static_object2);
+    auto static_object3 = Game::Object(); //Graphics::Color(125,255,25));
+    auto draw_static_object3 = Game::DrawableStaticObject(static_object3);
+
+    
+    floor_object.move([](Graphics::Transform& t){
+        t
+        .translate(-0.5f, 0.0f, -0.5f)
+        .scale(200.0f, 5.0f, 200.0f)
+        .translate(0.0f, -5.0f, 0.0f);
+    });
+    static_object2.move([](Graphics::Transform& t){ t.scale(2.5f, 2.0f, 2.5f); });
+    static_object3.move([](Graphics::Transform& t){
         t
         .scale(1.5f, 1.0f, 3.5f)
         .rotate(1.0f, 0.0f, 0.0f, ALLEGRO_PI / 5)
@@ -127,9 +149,9 @@ int main(int argc, char *argv[]) {
     Utility::SingletonOf<Utility::AllegroInitKeyboard>::instance().setup();
 
     auto evq = Events::EventQueue::create();
-    auto timed_ev = Events::Timer::create(1.0 / 60);
+    auto timed_ev = Events::Timer::create(1.0 / 10);
     auto timed_fps_calc = Events::Timer::create(1.0 / 4);
-    auto timed_close = Events::Timer::create(5.0);
+    auto timed_close = Events::Timer::create(500.0);
 
     evq << display;
     evq << Events::MouseEventSource();
@@ -177,9 +199,11 @@ int main(int argc, char *argv[]) {
             drawable.draw();
             drawable->translate(-5.0f, 0.0f, 5.0f);
 
-            static_object.draw_frame();
-            static_object2.draw_frame();
-            static_object3.draw_frame();
+            draw_floor.draw();
+            draw_static_object.draw();
+            draw_static_object2.draw();
+            draw_static_object3.draw();
+            new_player_view.draw();
 
             const double now_s = al_get_time();
             const double delta_s = now_s - last_draw;
@@ -215,7 +239,7 @@ int main(int argc, char *argv[]) {
                 fps = 1.0 / delta_smooth;
             }
             else {
-                static_object.make_transform([](Graphics::Transform& t) {
+                static_object.move([](Graphics::Transform& t) {
                     t.set_identity()
                     .translate(-0.5f, -0.5f, -0.5f)
                     .rotate(0.0f, 1.0f, 0.0f, 0.95f * al_get_time())
@@ -225,10 +249,14 @@ int main(int argc, char *argv[]) {
                 });
 
                 player.cpu_tick();
+                new_player.tick();
 
 
                 was_grounded = static_object2.work_collision(player);
                 was_grounded |= static_object3.work_collision(player);
+                was_grounded |= floor_object.work_collision(player);
+
+                floor_object.work_collision(new_player);
 
                 Events::Keyboard key_state;
                 const bool ducked = key_state.get_down(ALLEGRO_KEY_LCTRL);

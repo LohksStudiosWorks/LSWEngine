@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     const std::string platform = (argc > 1) ? argv[1] : "Linux";
     std::cout << "Running test on " << platform << "..." << std::endl;
 
-    constexpr float cube_side = 0.5f;
+    constexpr float cube_side = 1.0f;
     constexpr size_t cube_len = 36;
     Graphics::Vertex cube[cube_len]; // aka ALLEGRO_VERTEX[]
 
@@ -38,17 +38,17 @@ int main(int argc, char *argv[]) {
     {
         const float& s = cube_side;
         // 1. Front Face (z = 0.5)
-        set_face(0,  -s,  s, s,   s,  s, s,   s, -s, s,  -s, -s, s);
+        set_face(0,  0,  s, s,   s,  s, s,   s, 0, s,  0, 0, s);
         // 2. Back Face (z = -0.5)
-        set_face(6,   s,  s, -s, -s,  s, -s,  -s,-s, -s,   s, -s, -s);
+        set_face(6,   s,  s, 0, 0,  s, 0,  0,0, 0,   s, 0, 0);
         // 3. Left Face (x = -0.5)
-        set_face(12, -s,  s, -s, -s,  s,  s,  -s,-s,  s,  -s, -s, -s);
+        set_face(12, 0,  s, 0, 0,  s,  s,  0,0,  s,  0, 0, 0);
         // 4. Right Face (x = 0.5)
-        set_face(18,  s,  s,  s,  s,  s, -s,   s,-s, -s,   s, -s,  s);
+        set_face(18,  s,  s,  s,  s,  s, 0,   s,0, 0,   s, 0,  s);
         // 5. Top Face (y = 0.5)
-        set_face(24, -s,  s, -s,  s,  s, -s,   s, s,  s,  -s,  s,  s);
+        set_face(24, 0,  s, 0,  s,  s, 0,   s, s,  s,  0,  s,  s);
         // 6. Bottom Face (y = -0.5)
-        set_face(30, -s, -s,  s,  s, -s,  s,   s,-s, -s,  -s, -s, -s);
+        set_face(30, 0, 0,  s,  s, 0,  s,   s,0, 0,  0, 0, 0);
     }
 
     std::cout << "Loading PNG data from header..." << std::endl;
@@ -84,11 +84,18 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Setting up perspective and camera..." << std::endl;
 
-    Game::PlayerCamera player(2.0f);
+    Game::PlayerCamera player(Game::PlayerCamera::model::M_3D);
     Game::PlayerPerspective perspective(display);
     auto identity = Graphics::Transform().set_identity();
     
     //camera.use();
+    player
+        .set_gravity({0.0f, -0.0135f, 0.0f})
+        .set_height(2.0f)
+        .set_limits({-1e1f, 0.0f,-1e1f}, {1e1f,1e1f,1e1f})
+        .set_momentum({0.8f, 0.9997f, 0.8f});
+
+    
     player.teleport(0.0f, 0.0f, 0.0f);
     player.teleport_angle(-0.7854f, -0.2f);
     player.calc_apply_camera();
@@ -97,7 +104,24 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Loading vertex buffer..." << std::endl;
 
-    auto vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+    auto vertex_buffer = Graphics::VertexBuffer(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
+    auto drawable = Game::DrawableObject(vertex_buffer);
+    bool was_grounded = false;
+
+    auto static_object = Game::Object();
+    auto static_object2 = Game::Object(Graphics::Color(255,125,25));
+    auto static_object3 = Game::Object(Graphics::Color(125,255,25));
+
+    static_object2.make_transform([](Graphics::Transform& t){ t.scale(2.5f, 2.0f, 2.5f); });
+    static_object3.make_transform([](Graphics::Transform& t){
+        t
+        .scale(1.5f, 1.0f, 3.5f)
+        .rotate(1.0f, 0.0f, 0.0f, ALLEGRO_PI / 5)
+        .translate(-1.5f, 1.3f, 0.0f);
+    });
+    //static_object2->translate(0.0f, 1.5f, 0.0f);
+    
+    //auto vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
 
     Utility::SingletonOf<Utility::AllegroInitMouse>::instance().setup();
     Utility::SingletonOf<Utility::AllegroInitKeyboard>::instance().setup();
@@ -130,23 +154,29 @@ int main(int argc, char *argv[]) {
             Graphics::Color(15, 15, 20).clear_to_this();
             display.clear_depth_buffer(1.0f);
 
-            vertexes->translate(5.0f, 0.0f, 0.0f);
-            vertexes.draw();
-            vertexes->translate(0.0f, 0.0f, 5.0f);
-            vertexes.draw();
-            vertexes->translate(-5.0f, 0.0f, 0.0f);
-            vertexes.draw();
-            vertexes->translate(-5.0f, 0.0f, 0.0f);
-            vertexes.draw();
-            vertexes->translate(0.0f, 0.0f, -5.0f);
-            vertexes.draw();
-            vertexes->translate(0.0f, 0.0f, -5.0f);
-            vertexes.draw();
-            vertexes->translate(5.0f, 0.0f, 0.0f);
-            vertexes.draw();
-            vertexes->translate(5.0f, 0.0f, 0.0f);
-            vertexes.draw();
-            vertexes->translate(-5.0f, 0.0f, 5.0f);
+            drawable->translate(1.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(4.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(0.0f, 0.0f, 5.0f);
+            drawable.draw();
+            drawable->translate(-5.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(-5.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(0.0f, 0.0f, -5.0f);
+            drawable.draw();
+            drawable->translate(0.0f, 0.0f, -5.0f);
+            drawable.draw();
+            drawable->translate(5.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(5.0f, 0.0f, 0.0f);
+            drawable.draw();
+            drawable->translate(-5.0f, 0.0f, 5.0f);
+
+            static_object.draw_frame();
+            static_object2.draw_frame();
+            static_object3.draw_frame();
 
             const double now_s = al_get_time();
             const double delta_s = now_s - last_draw;
@@ -156,9 +186,13 @@ int main(int argc, char *argv[]) {
             display.set_render_state(ALLEGRO_DEPTH_TEST, 0);
 
             identity.set_identity().use();
-            identity.orthographic(0.0f, 0.0f, -1.0f, 320.0f, 240.0f, 1.0f).use_projection();
+            identity.orthographic(0.0f, 0.0f, -1.0f, 480.0f, 300.0f, 1.0f).use_projection();
 
-            font.draw(al_map_rgb(255,255,255), 2, 2, 0, "%.1lf FPS", fps);
+            font.draw(al_map_rgb(255,255,255), 2, 2, 0, "P: %04.1f %04.1f %04.1f S: %06.3f %06.3f %06.3f",
+                player.get_x(), player.get_y(), player.get_z(),
+                player.get_vx(), player.get_vy(), player.get_vz()
+            );
+            font.draw(al_map_rgb(255,255,255), 2, 10, 0, "%.1lf FPS | %.1f PTPS", fps, player.get_tick_time_secs());
 
             display.flip();
         }
@@ -174,27 +208,52 @@ int main(int argc, char *argv[]) {
             if (ev.timer.source == timed_fps_calc) {
                 fps = 1.0 / delta_smooth;
             }
+            else {
+                static_object.make_transform([](Graphics::Transform& t) {
+                    t.set_identity()
+                    .translate(-0.5f, -0.5f, -0.5f)
+                    .rotate(0.0f, 1.0f, 0.0f, 0.95f * al_get_time())
+                    .rotate(1.0f, 0.0f, 0.0f, 0.75f * al_get_time())
+                    .rotate(0.0f, 0.0f, 1.0f, 0.45f * al_get_time())
+                    .translate(0.5f, 0.5f, 0.5f);
+                });
 
-            player.cpu_tick();
+                player.cpu_tick();
 
-            Events::Keyboard key_state;
 
-            const float prop = (0.018f + static_cast<float>(key_state.get_down(ALLEGRO_KEY_LSHIFT)) * 0.035f) * multiplier_speed;
+                was_grounded = static_object2.work_collision(player);
+                was_grounded |= static_object3.work_collision(player);
 
-            if (key_state.get_down(ALLEGRO_KEY_W)) {
-                player.walk_towards(0.0f, prop);
-            }
-            if (key_state.get_down(ALLEGRO_KEY_S)) {
-                player.walk_towards(0.0f, -prop);
-            }
-            if (key_state.get_down(ALLEGRO_KEY_A)) {
-                player.walk_towards(-prop, 0.0f);
-            }
-            if (key_state.get_down(ALLEGRO_KEY_D)) {
-                player.walk_towards(prop, 0.0f);
-            }
-            if (key_state.get_down(ALLEGRO_KEY_SPACE) && player.get_y() == 0) {
-                player.jump(0.3f);
+                Events::Keyboard key_state;
+                const bool ducked = key_state.get_down(ALLEGRO_KEY_LCTRL);
+                const bool running = key_state.get_down(ALLEGRO_KEY_LSHIFT);
+
+                const float prop =
+                    (ducked 
+                        ? 0.006f
+                        : (running
+                            ? 0.04f
+                            : 0.018f
+                        )
+                    ) * multiplier_speed;
+
+                player.set_height(ducked ? 1.2f : 2.0f);
+
+                if (key_state.get_down(ALLEGRO_KEY_W)) {
+                    player.walk_towards(0.0f, prop);
+                }
+                if (key_state.get_down(ALLEGRO_KEY_S)) {
+                    player.walk_towards(0.0f, -prop);
+                }
+                if (key_state.get_down(ALLEGRO_KEY_A)) {
+                    player.walk_towards(-prop, 0.0f);
+                }
+                if (key_state.get_down(ALLEGRO_KEY_D)) {
+                    player.walk_towards(prop, 0.0f);
+                }
+                if (key_state.get_down(ALLEGRO_KEY_SPACE) && (player.get_y() <= 0.0f || was_grounded)) {
+                    player.jump(0.23f);
+                }
             }
         }
             break;
@@ -207,7 +266,7 @@ int main(int argc, char *argv[]) {
                 display.set_flag(ALLEGRO_FULLSCREEN_WINDOW, !(display.get_flags() & ALLEGRO_FULLSCREEN_WINDOW));
                 display.acknowledge_resize();
                 perspective.build_and_apply();
-                vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+                vertex_buffer.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
                 break;
             case ALLEGRO_KEY_R:
                 player.teleport(0.0f, 0.0f, 0.0f);
@@ -222,7 +281,7 @@ int main(int argc, char *argv[]) {
         case ALLEGRO_EVENT_DISPLAY_RESIZE:
             display.acknowledge_resize();
             perspective.build_and_apply();
-            vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+            vertex_buffer.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
             break;
         }
     }
@@ -230,6 +289,3 @@ int main(int argc, char *argv[]) {
     std::cout << "PASSED!" << std::endl;
     return 0;
 }
-
-
-
