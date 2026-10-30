@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Setting up perspective and camera..." << std::endl;
 
-    Game::Camera main_camera(display);
+    Game::Camera3D main_camera(display);
     main_camera.set_position({0.0f, 0.05f, 0.0f});
     main_camera.modify_gravity() = {0.0f, -0.0135f, 0.0f};
     main_camera.set_offset_height(2.0f);
@@ -92,16 +92,15 @@ int main(int argc, char *argv[]) {
     main_camera.set_angle(-0.7854f, -0.2f);
     main_camera.modify_momentum() = {0.8f, 0.9997f, 0.8f};
     main_camera.set_fov(120.0f);
-    main_camera.use_projection();
-    main_camera.use();
-    
-    auto identity = Graphics::Transform().set_identity();        
+    main_camera.use_all();
 
+    Game::Camera2D text_camera;
+    text_camera.set_limits(0.0f, 0.0f, 560.0f, 340.0f);
+    
     std::cout << "Loading vertex buffer..." << std::endl;
 
     auto vertex_buffer = Graphics::VertexBuffer(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
-    auto drawable = Game::DrawableObject(vertex_buffer);
-    //auto vertexes = Graphics::Vertexes::create(cube, Graphics::Vertexes::type::TRIANGLE_LIST, 0, bitmap);
+    auto drawable = Game::WrapVertexDrawable(vertex_buffer);
 
     Utility::SingletonOf<Utility::AllegroInitMouse>::instance().setup();
     Utility::SingletonOf<Utility::AllegroInitKeyboard>::instance().setup();
@@ -131,8 +130,7 @@ int main(int argc, char *argv[]) {
     for(bool running = true; running;) {
         while (evq.get_is_empty()) {
             display.set_render_state(ALLEGRO_DEPTH_TEST, 1);
-            main_camera.use_projection();
-            main_camera.use();
+            main_camera.use_all();
 
             Graphics::Color(15, 15, 20).clear_to_this();
             display.clear_depth_buffer(1.0f);
@@ -162,14 +160,15 @@ int main(int argc, char *argv[]) {
             
             display.set_render_state(ALLEGRO_DEPTH_TEST, 0);
 
-            identity.set_identity().use();
-            identity.orthographic(0.0f, 0.0f, -1.0f, 480.0f, 300.0f, 1.0f).use_projection();
+            text_camera.use_all();
 
-            font.draw(al_map_rgb(255,255,255), 2, 2, 0, "P: %04.1f %04.1f %04.1f S: %06.3f %06.3f %06.3f",
+            font.draw(al_map_rgb(255,255,255), 2, 2, 0,
+                "P: %04.1f %04.1f %04.1f S: %06.3f %06.3f %06.3f A: %06.1f %05.1f",
                 main_camera.get_position().x, main_camera.get_position().y, main_camera.get_position().z,
-                main_camera.get_direction().x, main_camera.get_direction().y, main_camera.get_direction().z
+                main_camera.get_direction().x, main_camera.get_direction().y, main_camera.get_direction().z,
+                main_camera.get_angle().x * 180.0f / ALLEGRO_PI, main_camera.get_angle().y * 180.0f / ALLEGRO_PI
             );
-            font.draw(al_map_rgb(255,255,255), 2, 10, 0, "%.1lf FPS | %.1lf PTPS", fps, main_camera.get_tick_delta());
+            font.draw(al_map_rgb(255,255,255), 2, 10, 0, "%06.1lf FPS | %04.1lf PTPS", fps, main_camera.get_tps());
 
             display.flip();
         }
@@ -242,7 +241,7 @@ int main(int argc, char *argv[]) {
             case ALLEGRO_KEY_F11:
                 display.set_flag(ALLEGRO_FULLSCREEN_WINDOW, !(display.get_flags() & ALLEGRO_FULLSCREEN_WINDOW));
                 display.acknowledge_resize();
-                main_camera.set_update_projection();
+                main_camera.update_projection();
                 vertex_buffer.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
                 timed_close.restart();
                 break;
@@ -261,7 +260,7 @@ int main(int argc, char *argv[]) {
             break;
         case ALLEGRO_EVENT_DISPLAY_RESIZE:
             display.acknowledge_resize();
-            main_camera.set_update_projection();
+            main_camera.update_projection();
             vertex_buffer.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
             break;
         }

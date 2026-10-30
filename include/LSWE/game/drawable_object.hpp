@@ -18,30 +18,27 @@ namespace Game {
     };
 
 
-    class DrawableStaticObject : public Drawable {
+    class WrapObjectDrawable : public Drawable {
     public:
-        DrawableStaticObject(const Object& ref);
+        WrapObjectDrawable(const Object& ref);
 
         void draw() const override;
     private:
         const Object& m_ref;
     };
 
-    class DrawableDynamicEntity : public Drawable {
+    class WrapDynamicEntityDrawable : public Drawable {
     public:
-        DrawableDynamicEntity(const DynamicEntity& ref);
+        WrapDynamicEntityDrawable(const DynamicPoint& ref);
 
         void draw() const override;
     private:
-        const DynamicEntity& m_ref;
+        const DynamicPoint& m_ref;
     };
-
-
-    
-
-    class DrawableObject {
+  
+    class WrapVertexDrawable {
     public:
-        DrawableObject(const Graphics::VertexArrayType& vertex_ref);
+        WrapVertexDrawable(const Graphics::VertexArrayType& vertex_ref);
 
         Graphics::Transform& get_transform();
         Graphics::Transform* operator->();
@@ -52,11 +49,11 @@ namespace Game {
         const Graphics::VertexArrayType& m_vertex_ref;
     };
 
-    /*class DrawableStaticObject : public DrawableObject {
+    /*class WrapObjectDrawable : public WrapVertexDrawable {
     
     };
 
-    class DrawableDynamicObject : public DrawableObject {
+    class DrawableDynamicObject : public WrapVertexDrawable {
 
     };*/
 

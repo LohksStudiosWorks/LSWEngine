@@ -1,7 +1,6 @@
 #include <LSWE/game/collisionable_object.hpp>
 
 #include <cmath>
-#include <cstring>
 
 namespace LSWE {
 namespace Game {
@@ -36,7 +35,7 @@ namespace Game {
         return *this;
     }
 
-    bool Object::work_collision(DynamicEntity& entity) {
+    bool Object::work_collision(DynamicPoint& entity) {
         detail::vector3d p = entity.get_position();
         detail::vector3d o = entity.get_last_position();
         detail::vector3d d = entity.get_direction();
@@ -49,7 +48,6 @@ namespace Game {
             o.y >= 0.0f && o.y <= 1.0f,
             o.z >= 0.0f && o.z <= 1.0f
         };
-
 
         if (m_test_collided = (p.x >= 0.0f && p.x <= 1.0f &&
             p.y >= 0.0f && p.y <= 1.0f &&
@@ -103,74 +101,129 @@ namespace Game {
         return false;
     }
 
+    const Graphics::Transform Object::get_draw_boundaries() const {
+        return m_boundaries;
+    }
 
-    detail::vector3d& DynamicEntity::modify_gravity() {
+    detail::vector3d& DynamicInterface::modify_gravity() {
         return m_gravity;
     }
 
-    detail::vector3d& DynamicEntity::modify_momentum() {
+    detail::vector3d& DynamicInterface::modify_momentum() {
         return m_momentum;
     }
 
-    void DynamicEntity::combine_position(detail::vector3d pos) {
-        m_position.x += pos.x;
-        m_position.y += pos.y;
-        m_position.z += pos.z;
+    void DynamicInterface::combine_position(detail::vector3d pos) {
+        (void)pos;
     }
 
-    void DynamicEntity::combine_speed(detail::vector3d speed) {
+    void DynamicInterface::combine_speed(detail::vector3d speed) {
         m_movement.x += speed.x;
         m_movement.y += speed.y;
         m_movement.z += speed.z;
     }
-
-    void DynamicEntity::set_position(detail::vector3d pos) {
-        m_position.x = pos.x;
-        m_position.y = pos.y;
-        m_position.z = pos.z;
-    }
-
-    void DynamicEntity::set_speed(detail::vector3d speed) {
+    
+    void DynamicInterface::set_speed(detail::vector3d speed) {
         m_movement.x = speed.x;
         m_movement.y = speed.y;
         m_movement.z = speed.z;
     }
 
-    void DynamicEntity::tick() {
-        detail::vector3d calc{m_position};
-
+    void DynamicInterface::tick() {
         m_movement.x = m_movement.x * m_momentum.x + m_gravity.x;
         m_movement.y = m_movement.y * m_momentum.y + m_gravity.y;
         m_movement.z = m_movement.z * m_momentum.z + m_gravity.z;
 
-        calc.x += m_movement.x;
-        calc.y += m_movement.y;
-        calc.z += m_movement.z;
-
-        {
-            const double cpu_now_time = al_get_time();
-            m_time.delta = cpu_now_time - m_time.last_s;
-            m_time.last_s = cpu_now_time;
-        }
-
-        m_last_position = m_position;
-        m_position = calc;
+        merge_movement_on_tick(); // also, do old = this, this += ... here
+        
+        const double cpu_now_time = al_get_time();
+        m_time.delta = cpu_now_time - m_time.last_s;
+        m_time.last_s = cpu_now_time;
     }
 
-    double DynamicEntity::get_tick_delta() const {
-        return m_time.delta;
+    double DynamicInterface::get_tps() const {
+        return 1.0 / std::max(m_time.delta, 1e-9);
     }
 
-    detail::vector3d DynamicEntity::get_direction() const {
+    detail::vector3d DynamicInterface::get_direction() const {
         return m_movement;
     }
 
-    const detail::vector3d& DynamicEntity::get_position() const {
+    void DynamicPoint::combine_position(detail::vector3d pos) {
+        m_position.x += pos.x;
+        m_position.y += pos.y;
+        m_position.z += pos.z;
+    }
+
+    void DynamicPoint::set_position(detail::vector3d pos) {
+        m_position.x = pos.x;
+        m_position.y = pos.y;
+        m_position.z = pos.z;
+    }
+
+    const detail::vector3d& DynamicPoint::get_position() const {
         return m_position;
     }
 
-    const detail::vector3d& DynamicEntity::get_last_position() const {
+    const detail::vector3d& DynamicPoint::get_last_position() const {
         return m_last_position;
+    }
+
+    void DynamicPoint::merge_movement_on_tick() {
+        m_last_position = m_position;
+        combine_position(m_movement);
+    }
+
+    void DynamicObject::combine_position(detail::vector3d pos) {
+        m_boundaries.translate(
+            pos.x,
+            pos.y,
+            pos.z
+        );
+        m_inverse.translate(
+            -pos.x,
+            -pos.y,
+            -pos.z
+        );
+    }
+
+    detail::vector3d DynamicObject::get_position() const {
+        detail::vector3d origin{0.0f,0.0f,0.0f};
+        m_boundaries.transform_coordinates(origin.x, origin.y, origin.z);
+        return origin;
+    }
+
+    detail::vector3d DynamicObject::get_last_position() const {
+        detail::vector3d origin{0.0f,0.0f,0.0f};
+        m_last_boundaries.transform_coordinates(origin.x, origin.y, origin.z);
+        return origin;
+    }
+
+    const Graphics::Transform DynamicObject::get_draw_boundaries() const {        
+        const double cpu_now_time = al_get_time();
+        const double alpha = std::min(((cpu_now_time - m_time.last_s) / m_time.delta), 1.0);
+
+        return m_last_boundaries.interpolate_with(m_boundaries, alpha);
+    }
+    
+    void DynamicObject::merge_movement_on_tick() {
+        m_last_boundaries.copy(m_boundaries);
+        combine_position(m_movement);
+
+        float corners[2][3] = {
+            {0, 0, 0}, {1, 1, 1}
+        };
+
+        for (size_t i = 0; i < 2; ++i) {
+            auto& coords = corners[i];
+            m_boundaries.transform_coordinates(coords[0], coords[1], coords[2]);
+        }
+
+        m_center = {
+            (corners[1][0] + corners[0][0]) * 0.5f,
+            (corners[1][1] + corners[0][1]) * 0.5f,
+            (corners[1][2] + corners[0][2]) * 0.5f
+        };
     }
 
 

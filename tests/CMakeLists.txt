@@ -28,6 +28,7 @@ set(JPG_TEST_LIST
 
 set(PNG_TEST_LIST
     test_vertex_transform
+    test_entity_nocol_works
     test_object_collision
 )
 

@@ -58,14 +58,14 @@ namespace Game {
 
 
 
-    DrawableStaticObject::DrawableStaticObject(const Object& ref)
+    WrapObjectDrawable::WrapObjectDrawable(const Object& ref)
         : m_ref(ref)
     {}
 
-    void DrawableStaticObject::draw() const {
+    void WrapObjectDrawable::draw() const {
 
         Graphics::Transform bak(al_get_current_transform());
-        Graphics::Transform combine = m_ref.m_boundaries.clone();
+        Graphics::Transform combine = m_ref.get_draw_boundaries().clone();
         combine.compose(bak);
 
         combine.use();
@@ -77,11 +77,11 @@ namespace Game {
     }
 
 
-    DrawableDynamicEntity::DrawableDynamicEntity(const DynamicEntity& ref)
+    WrapDynamicEntityDrawable::WrapDynamicEntityDrawable(const DynamicPoint& ref)
         : m_ref(ref)
     {}
 
-    void DrawableDynamicEntity::draw() const {
+    void WrapDynamicEntityDrawable::draw() const {
 
         Graphics::Transform bak(al_get_current_transform());
         Graphics::Transform combine;
@@ -108,19 +108,19 @@ namespace Game {
 
 
 
-    DrawableObject::DrawableObject(const Graphics::VertexArrayType& vertex_ref)
+    WrapVertexDrawable::WrapVertexDrawable(const Graphics::VertexArrayType& vertex_ref)
         : m_vertex_ref(vertex_ref)
     {}
 
-    Graphics::Transform& DrawableObject::get_transform() {
+    Graphics::Transform& WrapVertexDrawable::get_transform() {
         return m_object_positioning;
     }
 
-    Graphics::Transform* DrawableObject::operator->() {
+    Graphics::Transform* WrapVertexDrawable::operator->() {
         return &m_object_positioning;
     }
 
-    void DrawableObject::draw() const {
+    void WrapVertexDrawable::draw() const {
         Graphics::Transform bak(al_get_current_transform());
         Graphics::Transform combine = m_object_positioning.clone();
         combine.compose(bak);

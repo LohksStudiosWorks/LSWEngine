@@ -132,6 +132,24 @@ namespace Graphics {
         return *this;
     }
 
+    Transform Transform::interpolate_with(const Transform& other, double alpha) const {
+        if (alpha <= 0.0) return *this;
+        if (alpha >= 1.0) return other;
+
+        Transform t;
+        ALLEGRO_TRANSFORM& m = *t.m_transform;
+        ALLEGRO_TRANSFORM& s = *this->m_transform;
+        ALLEGRO_TRANSFORM& o = *other.m_transform;
+
+        for (size_t i = 0; i < 4; ++i) {
+            for (size_t j = 0; j < 4; ++j) {
+                m.m[i][j] = s.m[i][j] * (1.0f - alpha) + o.m[i][j] * alpha;
+            }
+        }
+
+        return t;
+    }
+
     int Transform::check_inverse(float tol) const {
         return al_check_inverse(m_transform.get(), tol);
     }

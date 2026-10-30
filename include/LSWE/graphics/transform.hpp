@@ -41,6 +41,8 @@ namespace Graphics {
         Transform& vertical_shear(float theta);
         Transform& compose(ALLEGRO_TRANSFORM* transform);
 
+        Transform interpolate_with(const Transform& other, double alpha) const;
+
         int check_inverse(float tol) const;
 
         void transform_coordinates(float& x, float& y) const;

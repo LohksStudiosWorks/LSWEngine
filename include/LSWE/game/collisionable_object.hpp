@@ -16,10 +16,11 @@ namespace Game {
      */
 
     // from Drawable to make things drawable
-    class DrawableStaticObject;
+    class WrapObjectDrawable;
+    class Entity;
 
 
-    class DynamicEntity;
+    class DynamicPoint;
     class DynamicObject;
 
     namespace detail {
@@ -70,10 +71,13 @@ namespace Game {
         Object& move(std::function<void(Graphics::Transform&)> cb);
 
         //bool work_collision(PlayerCamera& player);
-        bool work_collision(DynamicEntity& entity);
+        bool work_collision(DynamicPoint& entity);
         //bool work_collision(DynamicObject& another_object);
+
+        const Graphics::Transform get_draw_boundaries() const;
     protected:
-        friend class DrawableStaticObject;
+        friend class WrapObjectDrawable;
+        friend class Entity;
 
         Graphics::Transform m_boundaries, m_inverse;
         detail::vector3d m_scale_axes{1.0f, 1.0f, 1.0f};
@@ -82,7 +86,7 @@ namespace Game {
         bool m_test_collided = false;
     };
 
-    class DynamicEntity {
+    class DynamicInterface {
     public:
         detail::vector3d& modify_gravity();
         detail::vector3d& modify_momentum();
@@ -90,17 +94,15 @@ namespace Game {
         void combine_position(detail::vector3d pos);
         void combine_speed(detail::vector3d speed);
 
-        void set_position(detail::vector3d pos);
         void set_speed(detail::vector3d speed);
-        
+
         void tick();
-        double get_tick_delta() const;
+        double get_tps() const;
 
         detail::vector3d get_direction() const;
-        const detail::vector3d& get_position() const;
-        const detail::vector3d& get_last_position() const;
     protected:
-        detail::vector3d m_position{}, m_last_position{};
+        virtual void merge_movement_on_tick() = 0;
+
         detail::vector3d 
             m_gravity{}, // constant acceleration
             m_momentum{}, // constant friction
@@ -108,9 +110,37 @@ namespace Game {
         detail::timing m_time;
     };
 
-    class DynamicObject : public Object, public DynamicEntity {
+    class DynamicPoint : public DynamicInterface {
     public:
-        //bool work_collision(Game::PlayerCamera& player);
+        void combine_position(detail::vector3d pos);
+
+        void set_position(detail::vector3d pos);
+        
+        const detail::vector3d& get_position() const;
+        const detail::vector3d& get_last_position() const;
+    protected:
+        void merge_movement_on_tick() override;
+
+        detail::vector3d m_position{}, m_last_position{};
+    };
+
+    class DynamicObject : public Object, public DynamicInterface {
+    public:
+        void combine_position(detail::vector3d pos);
+
+        //void set_position(detail::vector3d pos);
+        
+        detail::vector3d get_position() const;
+        detail::vector3d get_last_position() const;
+
+        const Graphics::Transform get_draw_boundaries() const;
+    protected:
+        void merge_movement_on_tick() override;
+
+        friend class Entity;
+
+        Graphics::Transform m_last_boundaries;
+        detail::timing m_time;
     };
 
 

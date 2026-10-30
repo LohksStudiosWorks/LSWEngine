@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Loading vertex buffer..." << std::endl;
 
     auto vertex_buffer = Graphics::VertexBuffer(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
-    auto drawable = Game::DrawableObject(vertex_buffer);
+    auto drawable = Game::WrapVertexDrawable(vertex_buffer);
     bool was_grounded = false;
 
     auto static_object = Game::Object();
