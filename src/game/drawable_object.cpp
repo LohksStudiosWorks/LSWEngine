@@ -77,11 +77,11 @@ namespace Game {
     }
 
 
-    WrapDynamicEntityDrawable::WrapDynamicEntityDrawable(const DynamicPoint& ref)
+    WrapDynamicPointDrawable::WrapDynamicPointDrawable(const DynamicPoint& ref)
         : m_ref(ref)
     {}
 
-    void WrapDynamicEntityDrawable::draw() const {
+    void WrapDynamicPointDrawable::draw() const {
 
         Graphics::Transform bak(al_get_current_transform());
         Graphics::Transform combine;

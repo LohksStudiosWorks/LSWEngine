@@ -27,9 +27,9 @@ namespace Game {
         const Object& m_ref;
     };
 
-    class WrapDynamicEntityDrawable : public Drawable {
+    class WrapDynamicPointDrawable : public Drawable {
     public:
-        WrapDynamicEntityDrawable(const DynamicPoint& ref);
+        WrapDynamicPointDrawable(const DynamicPoint& ref);
 
         void draw() const override;
     private:
