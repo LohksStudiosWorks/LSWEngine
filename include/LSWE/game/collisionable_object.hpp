@@ -6,7 +6,6 @@
 #include <LSWE/graphics/vertex.hpp>
 #include <LSWE/graphics/transform.hpp>
 #include <LSWE/graphics/color.hpp>
-#include <LSWE/game/player_camera.hpp>
 
 namespace LSWE {
 namespace Game {
@@ -70,7 +69,7 @@ namespace Game {
 
         Object& move(std::function<void(Graphics::Transform&)> cb);
 
-        bool work_collision(PlayerCamera& player);
+        //bool work_collision(PlayerCamera& player);
         bool work_collision(DynamicEntity& entity);
         //bool work_collision(DynamicObject& another_object);
     protected:
@@ -90,8 +89,12 @@ namespace Game {
 
         void combine_position(detail::vector3d pos);
         void combine_speed(detail::vector3d speed);
+
+        void set_position(detail::vector3d pos);
+        void set_speed(detail::vector3d speed);
         
         void tick();
+        double get_tick_delta() const;
 
         detail::vector3d get_direction() const;
         const detail::vector3d& get_position() const;
@@ -107,7 +110,7 @@ namespace Game {
 
     class DynamicObject : public Object, public DynamicEntity {
     public:
-        bool work_collision(Game::PlayerCamera& player);
+        //bool work_collision(Game::PlayerCamera& player);
     };
 
 

@@ -84,23 +84,18 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Setting up perspective and camera..." << std::endl;
 
-    Game::PlayerCamera player(Game::PlayerCamera::model::M_3D);
-    Game::PlayerPerspective perspective(display);
-    auto identity = Graphics::Transform().set_identity();
+    Game::Camera main_camera(display);
+    main_camera.set_position({0.0f, 0.05f, 0.0f});
+    main_camera.modify_gravity() = {0.0f, -0.0135f, 0.0f};
+    main_camera.set_offset_height(2.0f);
+    main_camera.set_speed({0.0f, 0.0f, 0.0f});
+    main_camera.set_angle(-0.7854f, -0.2f);
+    main_camera.modify_momentum() = {0.8f, 0.9997f, 0.8f};
+    main_camera.set_fov(120.0f);
+    main_camera.use_projection();
+    main_camera.use();
     
-    //camera.use();
-    player
-        .set_gravity({0.0f, -0.0135f, 0.0f})
-        .set_height(2.0f)
-        .set_limits({-1e1f, 0.0f,-1e1f}, {1e1f,1e1f,1e1f})
-        .set_momentum({0.8f, 0.9997f, 0.8f});
-
-    
-    player.teleport(0.0f, 0.0f, 0.0f);
-    player.teleport_angle(-0.7854f, -0.2f);
-    player.calc_apply_camera();
-    perspective.set_fov(120.0f);
-    perspective.build_and_apply();
+    auto identity = Graphics::Transform().set_identity();        
 
     std::cout << "Loading vertex buffer..." << std::endl;
 
@@ -136,8 +131,8 @@ int main(int argc, char *argv[]) {
     for(bool running = true; running;) {
         while (evq.get_is_empty()) {
             display.set_render_state(ALLEGRO_DEPTH_TEST, 1);
-            perspective.build_and_apply();
-            player.calc_apply_camera();
+            main_camera.use_projection();
+            main_camera.use();
 
             Graphics::Color(15, 15, 20).clear_to_this();
             display.clear_depth_buffer(1.0f);
@@ -171,10 +166,10 @@ int main(int argc, char *argv[]) {
             identity.orthographic(0.0f, 0.0f, -1.0f, 480.0f, 300.0f, 1.0f).use_projection();
 
             font.draw(al_map_rgb(255,255,255), 2, 2, 0, "P: %04.1f %04.1f %04.1f S: %06.3f %06.3f %06.3f",
-                player.get_x(), player.get_y(), player.get_z(),
-                player.get_vx(), player.get_vy(), player.get_vz()
+                main_camera.get_position().x, main_camera.get_position().y, main_camera.get_position().z,
+                main_camera.get_direction().x, main_camera.get_direction().y, main_camera.get_direction().z
             );
-            font.draw(al_map_rgb(255,255,255), 2, 10, 0, "%.1lf FPS | %.1f PTPS", fps, player.get_tick_time_secs());
+            font.draw(al_map_rgb(255,255,255), 2, 10, 0, "%.1lf FPS | %.1lf PTPS", fps, main_camera.get_tick_delta());
 
             display.flip();
         }
@@ -194,7 +189,7 @@ int main(int argc, char *argv[]) {
                 fps = 1.0 / delta_smooth;
             }
             else {
-                player.cpu_tick();
+                main_camera.tick();
 
                 Events::Keyboard key_state;
                 const bool ducked = key_state.get_down(ALLEGRO_KEY_LCTRL);
@@ -209,27 +204,32 @@ int main(int argc, char *argv[]) {
                         )
                     ) * multiplier_speed;
 
-                player.set_height(ducked ? 1.2f : 2.0f);
+                main_camera.set_offset_height(ducked ? 1.2f : 2.0f);
 
                 if (key_state.get_down(ALLEGRO_KEY_W)) {
                     timed_close.restart();
-                    player.walk_towards(0.0f, prop);
+                    main_camera.walk(0.0f, prop);
                 }
                 if (key_state.get_down(ALLEGRO_KEY_S)) {
                     timed_close.restart();
-                    player.walk_towards(0.0f, -prop);
+                    main_camera.walk(0.0f, -prop);
                 }
                 if (key_state.get_down(ALLEGRO_KEY_A)) {
                     timed_close.restart();
-                    player.walk_towards(-prop, 0.0f);
+                    main_camera.walk(-prop, 0.0f);
                 }
                 if (key_state.get_down(ALLEGRO_KEY_D)) {
                     timed_close.restart();
-                    player.walk_towards(prop, 0.0f);
+                    main_camera.walk(prop, 0.0f);
                 }
-                if (key_state.get_down(ALLEGRO_KEY_SPACE) && player.get_y() <= 0.0f) {
-                    timed_close.restart();
-                    player.jump(0.23f);
+                if (main_camera.get_position().y <= 0.0f) {
+                    main_camera.combine_position({0.0f, - main_camera.get_position().y, 0.0f});
+                    main_camera.combine_speed({0.0f, - main_camera.get_direction().y, 0.0f});
+
+                    if (key_state.get_down(ALLEGRO_KEY_SPACE)) {
+                        timed_close.restart();
+                        main_camera.combine_speed({0.0f, 0.23f, 0.0f});
+                    }
                 }
             }
         }
@@ -242,25 +242,26 @@ int main(int argc, char *argv[]) {
             case ALLEGRO_KEY_F11:
                 display.set_flag(ALLEGRO_FULLSCREEN_WINDOW, !(display.get_flags() & ALLEGRO_FULLSCREEN_WINDOW));
                 display.acknowledge_resize();
-                perspective.build_and_apply();
+                main_camera.set_update_projection();
                 vertex_buffer.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
                 timed_close.restart();
                 break;
             case ALLEGRO_KEY_R:
-                player.teleport(0.0f, 0.0f, 0.0f);
-                player.teleport_angle(-0.7854f, -0.2f);
+                main_camera.set_position({0.0f, 0.05f, 0.0f});
+                main_camera.set_speed({0.0f, 0.0f, 0.0f});
+                main_camera.set_angle(-0.7854f, -0.2f);
                 timed_close.restart();
                 break;
             }
             break;
         case ALLEGRO_EVENT_MOUSE_AXES:
-            player.move_angle(- ev.mouse.dx * 0.35f, ev.mouse.dy * 0.35f);
+            main_camera.angle(- ev.mouse.dx * 0.0011f, ev.mouse.dy * 0.0011f);
             display.move_mouse(width / 2, height / 2);
             timed_close.restart();
             break;
         case ALLEGRO_EVENT_DISPLAY_RESIZE:
             display.acknowledge_resize();
-            perspective.build_and_apply();
+            main_camera.set_update_projection();
             vertex_buffer.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
             break;
         }

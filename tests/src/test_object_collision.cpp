@@ -53,7 +53,10 @@ int main(int argc, char *argv[]) {
     std::cout << "Loading PNG data from header..." << std::endl;
 
     const auto png_embedded = b::embed<"resources/dirt_block.png">();
+    const auto png2_embedded = b::embed<"resources/cobble_block.png">();
+
     auto fp = Utility::File::open_mem((void*)png_embedded.data(), png_embedded.length(), "rb");
+    auto fp2 = Utility::File::open_mem((void*)png2_embedded.data(), png2_embedded.length(), "rb");
 
     constexpr float multiplier_speed = 1.0f;
 
@@ -75,6 +78,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Loading png..." << std::endl;
 
     auto bitmap = Graphics::Bitmap::load(fp, ".png");
+    auto bitmap_cobble = Graphics::Bitmap::load(fp2, ".png");
 
     std::cout << "Setting up cursor and flags..." << std::endl;
 
@@ -83,37 +87,34 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Setting up perspective and camera..." << std::endl;
 
-    Game::PlayerCamera player(Game::PlayerCamera::model::M_3D);
-    Game::PlayerPerspective perspective(display);
-    auto identity = Graphics::Transform().set_identity();
-    
-    //camera.use();
-    player
-        .set_gravity({0.0f, -0.0135f, 0.0f})
-        .set_height(2.0f)
-        .set_limits({-1e1f, -1.0f,-1e1f}, {1e1f,1e1f,1e1f})
-        .set_momentum({0.8f, 0.9997f, 0.8f});
+    //Game::PlayerCamera player(Game::PlayerCamera::model::M_3D);
+    //Game::PlayerPerspective perspective(display);
 
-    
-    player.teleport(0.0f, 0.0f, 0.0f);
-    player.teleport_angle(-0.7854f, -0.2f);
-    player.calc_apply_camera();
-    perspective.set_fov(120.0f);
-    perspective.build_and_apply();
+    Game::Camera main_camera(display);
+    main_camera.set_position({0.0f, 0.05f, 0.0f});
+    main_camera.set_offset_height(2.0f);
+    main_camera.set_speed({0.0f, 0.0f, 0.0f});
+    main_camera.set_angle(-0.7854f, -0.2f);
+    main_camera.modify_momentum() = {0.8f, 0.9997f, 0.8f};
+    main_camera.use_projection();
+    main_camera.use();
+
+    auto identity = Graphics::Transform().set_identity();
 
     std::cout << "Loading vertex buffer..." << std::endl;
 
     auto vertex_buffer = Graphics::VertexBuffer(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
+    auto vertex_buffer_cobble = Graphics::VertexBuffer(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap_cobble);
     auto drawable = Game::DrawableObject(vertex_buffer);
-    bool was_grounded = false;
+    auto drawable_cobble = Game::DrawableObject(vertex_buffer_cobble);
 
 
-    auto new_player = Game::DynamicEntity();
-    auto new_player_view = Game::DrawableDynamicEntity(new_player);
+    auto dynamic_object1 = Game::DynamicEntity();
+    auto dynamic_object1_view = Game::DrawableDynamicEntity(dynamic_object1);
 
-    new_player.modify_gravity().y = -0.0002f;
-    new_player.modify_momentum() = { 0.9999f, 0.999f, 0.9999f };
-    new_player.combine_speed({-0.005f, 0.015f, -0.005f});
+    dynamic_object1.modify_gravity().y = -0.0002f;
+    dynamic_object1.modify_momentum() = { 0.9999f, 0.999f, 0.9999f };
+    dynamic_object1.combine_speed({-0.005f, 0.015f, -0.005f});
 
 
     auto floor_object = Game::Object();
@@ -134,6 +135,11 @@ int main(int argc, char *argv[]) {
         .scale(200.0f, 5.0f, 200.0f)
         .translate(0.0f, -5.0f, 0.0f);
     });
+
+    drawable_cobble->translate(-0.5f, 0.0f, -0.5f)
+        .scale(200.0f, 5.0f, 200.0f)
+        .translate(0.0f, -5.0f, 0.0f);
+
     static_object2.move([](Graphics::Transform& t){ t.scale(2.5f, 2.0f, 2.5f); });
     static_object3.move([](Graphics::Transform& t){
         t
@@ -173,11 +179,13 @@ int main(int argc, char *argv[]) {
     for(bool running = true; running;) {
         while (evq.get_is_empty()) {
             display.set_render_state(ALLEGRO_DEPTH_TEST, 1);
-            perspective.build_and_apply();
-            player.calc_apply_camera();
+            main_camera.use_projection();
+            main_camera.use();
 
             Graphics::Color(15, 15, 20).clear_to_this();
             display.clear_depth_buffer(1.0f);
+
+            drawable_cobble.draw();
 
             drawable->translate(1.0f, 0.0f, 0.0f);
             drawable.draw();
@@ -203,7 +211,7 @@ int main(int argc, char *argv[]) {
             draw_static_object.draw();
             draw_static_object2.draw();
             draw_static_object3.draw();
-            new_player_view.draw();
+            dynamic_object1_view.draw();
 
             const double now_s = al_get_time();
             const double delta_s = now_s - last_draw;
@@ -216,10 +224,10 @@ int main(int argc, char *argv[]) {
             identity.orthographic(0.0f, 0.0f, -1.0f, 480.0f, 300.0f, 1.0f).use_projection();
 
             font.draw(al_map_rgb(255,255,255), 2, 2, 0, "P: %04.1f %04.1f %04.1f S: %06.3f %06.3f %06.3f",
-                player.get_x(), player.get_y(), player.get_z(),
-                player.get_vx(), player.get_vy(), player.get_vz()
+                main_camera.get_position().x, main_camera.get_position().y, main_camera.get_position().z,
+                main_camera.get_direction().x, main_camera.get_direction().y, main_camera.get_direction().z
             );
-            font.draw(al_map_rgb(255,255,255), 2, 10, 0, "%.1lf FPS | %.1f PTPS", fps, player.get_tick_time_secs());
+            font.draw(al_map_rgb(255,255,255), 2, 10, 0, "%.1lf FPS | %.1lf PTPS", fps, main_camera.get_tick_delta());
 
             display.flip();
         }
@@ -248,15 +256,15 @@ int main(int argc, char *argv[]) {
                     .translate(0.5f, 0.5f, 0.5f);
                 });
 
-                player.cpu_tick();
-                new_player.tick();
+                main_camera.tick();
+                dynamic_object1.tick();
 
 
-                was_grounded = static_object2.work_collision(player);
-                was_grounded |= static_object3.work_collision(player);
-                was_grounded |= floor_object.work_collision(player);
+                //was_grounded = static_object2.work_collision(main_camera);
+                //was_grounded |= static_object3.work_collision(main_camera);
+                //was_grounded |= floor_object.work_collision(main_camera);
 
-                floor_object.work_collision(new_player);
+                floor_object.work_collision(dynamic_object1);
 
                 Events::Keyboard key_state;
                 const bool ducked = key_state.get_down(ALLEGRO_KEY_LCTRL);
@@ -271,28 +279,38 @@ int main(int argc, char *argv[]) {
                         )
                     ) * multiplier_speed;
 
-                player.set_height(ducked ? 1.2f : 2.0f);
+                main_camera.set_offset_height(ducked ? 1.2f : 2.0f);
 
                 if (key_state.get_down(ALLEGRO_KEY_W)) {
                     timed_close.restart();
-                    player.walk_towards(0.0f, prop);
+                    main_camera.walk(0.0f, prop);
                 }
                 if (key_state.get_down(ALLEGRO_KEY_S)) {
                     timed_close.restart();
-                    player.walk_towards(0.0f, -prop);
+                    main_camera.walk(0.0f, -prop);
                 }
                 if (key_state.get_down(ALLEGRO_KEY_A)) {
                     timed_close.restart();
-                    player.walk_towards(-prop, 0.0f);
+                    main_camera.walk(-prop, 0.0f);
                 }
                 if (key_state.get_down(ALLEGRO_KEY_D)) {
                     timed_close.restart();
-                    player.walk_towards(prop, 0.0f);
+                    main_camera.walk(prop, 0.0f);
                 }
-                if (key_state.get_down(ALLEGRO_KEY_SPACE) && (player.get_y() <= 0.0f || was_grounded)) {
+                if (key_state.get_down(ALLEGRO_KEY_SPACE)) {
                     timed_close.restart();
-                    player.jump(0.23f);
+                    main_camera.combine_position({ 0.0f, 0.1f, 0.0f });
                 }
+                if (key_state.get_down(ALLEGRO_KEY_LSHIFT)) {
+                    timed_close.restart();
+                    main_camera.combine_position({ 0.0f, -0.1f, 0.0f });
+                }
+
+
+                //if (key_state.get_down(ALLEGRO_KEY_SPACE) && (main_camera.get_position().y <= 0.0f || was_grounded)) {
+                //    timed_close.restart();
+                //    player.jump(0.23f);
+                //}
             }
         }
             break;
@@ -304,26 +322,29 @@ int main(int argc, char *argv[]) {
             case ALLEGRO_KEY_F11:
                 display.set_flag(ALLEGRO_FULLSCREEN_WINDOW, !(display.get_flags() & ALLEGRO_FULLSCREEN_WINDOW));
                 display.acknowledge_resize();
-                perspective.build_and_apply();
+                main_camera.set_update_projection();
                 vertex_buffer.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
+                vertex_buffer_cobble.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap_cobble);
                 timed_close.restart();
                 break;
             case ALLEGRO_KEY_R:
-                player.teleport(0.0f, 0.0f, 0.0f);
-                player.teleport_angle(-0.7854f, -0.2f);
+                main_camera.set_position({0.0f, 0.05f, 0.0f});
+                main_camera.set_speed({0.0f, 0.0f, 0.0f});
+                main_camera.set_angle(-0.7854f, -0.2f);
                 timed_close.restart();
                 break;
             }
             break;
         case ALLEGRO_EVENT_MOUSE_AXES:
-            player.move_angle(- ev.mouse.dx * 0.35f, ev.mouse.dy * 0.35f);
+            main_camera.angle(- ev.mouse.dx * 0.0011f, ev.mouse.dy * 0.0011f);
             display.move_mouse(width / 2, height / 2);
             timed_close.restart();
             break;
         case ALLEGRO_EVENT_DISPLAY_RESIZE:
             display.acknowledge_resize();
-            perspective.build_and_apply();
+            main_camera.set_update_projection();
             vertex_buffer.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap);
+            vertex_buffer_cobble.recreate(cube, ALLEGRO_PRIM_TRIANGLE_LIST, 0, bitmap_cobble);
             break;
         }
     }

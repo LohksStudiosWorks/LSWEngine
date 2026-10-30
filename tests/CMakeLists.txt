@@ -69,6 +69,7 @@ foreach(test_src ${TEST_SOURCES})
 
     if(test_name IN_LIST PNG_TEST_LIST)
         b_embed(${test_name} "resources/dirt_block.png")
+        b_embed(${test_name} "resources/cobble_block.png")
     endif()
 
     if(test_name IN_LIST GIF_TEST_LIST)
