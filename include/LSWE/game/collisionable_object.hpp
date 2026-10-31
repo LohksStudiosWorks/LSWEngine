@@ -79,10 +79,10 @@ namespace Game {
 
         Object& move(std::function<void(Graphics::Transform&)> cb);
 
-        bool work_collision(DynamicPoint& entity);
-        bool work_collision(DynamicObject& entity);
+        virtual bool work_collision(DynamicPoint& entity);
+        virtual bool work_collision(DynamicObject& entity);
 
-        const Graphics::Transform get_draw_boundaries() const;
+        virtual const Graphics::Transform get_draw_boundaries() const;
     protected:
         struct collision_res {
             detail::vector3d delta_pos;
@@ -102,8 +102,6 @@ namespace Game {
         Graphics::Transform m_boundaries, m_inverse;
         detail::vector3d m_scale_axes{1.0f, 1.0f, 1.0f};
         detail::vector3d m_center{};
-
-        bool m_test_collided = false;
     };
 
     class DynamicInterface {
@@ -111,8 +109,8 @@ namespace Game {
         detail::vector3d& modify_gravity();
         detail::vector3d& modify_momentum();
 
-        void combine_position(detail::vector3d pos);
-        void combine_speed(detail::vector3d speed);
+        virtual void combine_position(detail::vector3d pos);
+        virtual void combine_speed(detail::vector3d speed);
 
         void set_speed(detail::vector3d speed);
 
@@ -132,7 +130,7 @@ namespace Game {
 
     class DynamicPoint : public DynamicInterface {
     public:
-        void combine_position(detail::vector3d pos);
+        void combine_position(detail::vector3d pos) override;
 
         void set_position(detail::vector3d pos);
         
@@ -146,15 +144,15 @@ namespace Game {
 
     class DynamicObject : public Object, public DynamicInterface {
     public:
-        void combine_position(detail::vector3d pos);
+        void combine_position(detail::vector3d pos) override;
 
-        bool work_collision(DynamicPoint& entity);
-        bool work_collision(DynamicObject& entity);
+        bool work_collision(DynamicPoint& entity) override;
+        bool work_collision(DynamicObject& entity) override;
         
         detail::vector3d get_position() const;
         detail::vector3d get_last_position() const;
 
-        const Graphics::Transform get_draw_boundaries() const;
+        const Graphics::Transform get_draw_boundaries() const override;
     protected:
         void merge_movement_on_tick() override;
 

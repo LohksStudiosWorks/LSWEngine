@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
     main_camera.set_fov(120.0f);
 
     Game::Camera2D text_camera;
-    text_camera.set_limits(0.0f, 0.0f, 560.0f, 340.0f);
+    text_camera.set_limits(0.0f, 0.0f, 863.0f, 480.0f);
 
     auto cubix = Game::Entity::create_static_entity(cube, bitmaps[0], ALLEGRO_PRIM_TRIANGLE_LIST);
 
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
     pushable_cubix.as_dynamic_object().move([](Graphics::Transform& t){ 
         t.translate(15.0f, 0.0f, -5.0f);
     });
-    pushable_cubix.as_dynamic_object().modify_momentum() = {0.99f, 0.9999f, 0.99f};
+    pushable_cubix.as_dynamic_object().modify_momentum() = {0.9f, 0.0f, 0.9f};
 
     std::vector<Game::Entity> around_cubes;
     for(int x = 0; x < 3; ++x) {
@@ -138,13 +138,22 @@ int main(int argc, char *argv[]) {
 
             text_camera.use_all();
 
+            const auto& obj = pushable_cubix.as_dynamic_object();
+
             font.draw(al_map_rgb(255,255,255), 2, 2, 0,
-                "P: %04.1f %04.1f %04.1f S: %06.3f %06.3f %06.3f A: %06.1f %05.1f",
+                "P: %04.1f %04.1f %04.1f S: %06.3f %06.3f %06.3f A: %06.1f %05.1f TPS %04.1f",
                 main_camera.get_position().x, main_camera.get_position().y, main_camera.get_position().z,
                 main_camera.get_direction().x, main_camera.get_direction().y, main_camera.get_direction().z,
-                main_camera.get_angle().x * 180.0f / ALLEGRO_PI, main_camera.get_angle().y * 180.0f / ALLEGRO_PI
+                main_camera.get_angle().x * 180.0f / ALLEGRO_PI, main_camera.get_angle().y * 180.0f / ALLEGRO_PI,
+                main_camera.get_tps()
             );
-            font.draw(al_map_rgb(255,255,255), 2, 10, 0, "%06.1lf FPS | %04.1lf PTPS", fps.get(), main_camera.get_tps());
+            font.draw(al_map_rgb(255,255,255), 2, 10, 0,
+                "Obj: P: %04.1f %04.1f %04.1f S: %06.3f %06.3f %06.3f TPS %04.1f",
+                obj.get_position().x, obj.get_position().y, obj.get_position().z,
+                obj.get_direction().x, obj.get_direction().y, obj.get_direction().z,
+                obj.get_tps()
+            );
+            font.draw(al_map_rgb(255,255,255), 2, 18, 0, "%06.1lf FPS", fps.get());
 
             display.flip();
         }
@@ -162,18 +171,25 @@ int main(int argc, char *argv[]) {
             }
             else {
                 main_camera.tick();
+                pushable_cubix.tick();
+
+                auto& dyn_pushable = pushable_cubix.as_dynamic_object();
 
                 cubix.as_object().work_collision(main_camera);
                 rotated_cubix.as_object().work_collision(main_camera);
                 for (auto& cubic : around_cubes)
                     cubic.as_object().work_collision(main_camera);
 
-                cubix.as_object().work_collision(pushable_cubix.as_dynamic_object());
-                rotated_cubix.as_object().work_collision(pushable_cubix.as_dynamic_object());
-                for (auto& cubic : around_cubes)
-                    cubic.as_object().work_collision(pushable_cubix.as_dynamic_object());
 
-                pushable_cubix.as_dynamic_object().work_collision(main_camera);
+                    
+                cubix.as_object().work_collision(dyn_pushable);
+                rotated_cubix.as_object().work_collision(dyn_pushable);
+                for (auto& cubic : around_cubes)
+                    cubic.as_object().work_collision(dyn_pushable);
+
+
+
+                dyn_pushable.work_collision(main_camera);
 
 
                 Events::Keyboard key_state;

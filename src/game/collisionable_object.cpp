@@ -99,6 +99,14 @@ namespace Game {
     bool Object::work_collision(DynamicObject& entity) {
         auto res = calculate_collision_for(entity);
         if (res.collided) {
+            /*printf("COL: [P=%.3f:%.3f:%.3f S=%.3f:%.3f:%.3f]\n",
+                res.delta_pos.x,
+                res.delta_pos.y,
+                res.delta_pos.z,
+                res.delta_speed.x,
+                res.delta_speed.y,
+                res.delta_speed.z
+            );*/
             entity.combine_position(res.delta_pos);
             entity.combine_speed(res.delta_speed);
         }
@@ -212,10 +220,6 @@ namespace Game {
         };
 
         detail::vector3d d = entity.get_direction(); // Moving object's speed/velocity
-        detail::vector3d res_pos{0.0f,0.0f,0.0f};
-        detail::vector3d res_speed{0.0f,0.0f,0.0f};
-
-        bool collided = false;
 
         for (const auto& local_corner : local_corners) {
             // Step 1: Transform 'other's local corner into World Space using 'other.m_transform'
@@ -231,7 +235,6 @@ namespace Game {
                 p.y >= 0.0f && p.y <= 1.0f &&
                 p.z >= 0.0f && p.z <= 1.0f)
             {
-                collided = true;
                 constexpr float off = 1.01f;
 
                 const float mx = (p.x < 0.5f ? -p.x : 1.0f - p.x);
@@ -257,11 +260,11 @@ namespace Game {
                 };
 
                 // Find the dominant axis of penetration relative to 'this'
-                if (fabsf(mx) < fabsf(my) && fabsf(mx) < fabsf(mz)) {
+                if (fabsf(mx) > fabsf(my) && fabsf(mx) > fabsf(mz)) {
                     detail::vector3d n_local = (p.x < 0.5f) ? detail::vector3d{-1.0f, 0.0f, 0.0f} : detail::vector3d{1.0f, 0.0f, 0.0f};
                     apply_slide_response(n_local, mx * off);
                 }
-                else if (fabsf(my) < fabsf(mz)) {
+                else if (fabsf(my) > fabsf(mz)) {
                     detail::vector3d n_local = (p.y < 0.5f) ? detail::vector3d{0.0f, -1.0f, 0.0f} : detail::vector3d{0.0f, 1.0f, 0.0f};
                     apply_slide_response(n_local, my * off);
                 }
@@ -273,22 +276,19 @@ namespace Game {
                 // Convert corrections back to world space using 'this' (static) object's transform matrix
                 detail::vector3d world_pos_corr = transform_vector_to_world(position_corr_local);
                 detail::vector3d world_speed_corr = transform_vector_to_world(speed_corr_local);
-
-                // Apply corrections exclusively to the moving object ('other')
-                //entity.combine_position(world_pos_corr);
-                //entity.combine_speed(world_speed_corr);
-                res_pos += world_pos_corr;
-                res_speed += world_speed_corr;
-
-                //entity.m_test_collided = true;
-                break; // Stop after handling the first colliding corner this tick
+                
+                return {
+                    .delta_pos = world_pos_corr,
+                    .delta_speed = world_speed_corr,
+                    .collided = true
+                };
             }
         }
 
         return {
-            .delta_pos = res_pos,
-            .delta_speed = res_speed,
-            .collided = collided
+            .delta_pos = {0.0f,0.0f,0.0f},
+            .delta_speed = {0.0f,0.0f,0.0f},
+            .collided = false
         };
     }
 
@@ -376,15 +376,12 @@ namespace Game {
             pos.y,
             pos.z
         );
-        m_inverse.translate(
-            -pos.x,
-            -pos.y,
-            -pos.z
-        );
+        m_inverse.copy(m_boundaries);
+        m_inverse.invert_3d();
     }
 
     bool DynamicObject::work_collision(DynamicPoint& entity) {
-        auto res = calculate_collision_for(entity);
+        auto res = calculate_collision_for(entity);        
         if (res.collided) {
             res.delta_pos *= 0.5f;
             res.delta_speed *= 0.5f;
@@ -427,7 +424,7 @@ namespace Game {
 
     const Graphics::Transform DynamicObject::get_draw_boundaries() const {        
         const double cpu_now_time = al_get_time();
-        const double alpha = std::min(((cpu_now_time - m_time.last_s) / m_time.delta), 1.0);
+        const double alpha = std::min(((cpu_now_time - m_time.last_s) / std::max(m_time.delta, 1e-9)), 1.0);
 
         return m_last_boundaries.interpolate_with(m_boundaries, alpha);
     }

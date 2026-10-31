@@ -70,7 +70,7 @@ namespace Game {
 
         combine.use();
 
-        detail::box.change_color(m_ref.m_test_collided ? m_hit_color : m_color);
+        detail::box.change_color(/*m_ref.m_test_collided ? m_hit_color :*/ m_color);
         al_draw_prim(detail::box.verts, NULL, NULL, 0, 24, ALLEGRO_PRIM_LINE_LIST);
         
         bak.use();

@@ -68,7 +68,7 @@ namespace Game {
     
     void Camera3D::use() {
         const double cpu_now_time = al_get_time();
-        const double alpha = std::min(((cpu_now_time - m_time.last_s) / m_time.delta), 1.0);
+        const double alpha = std::min(((cpu_now_time - m_time.last_s) / std::max(m_time.delta, 1e-9)), 1.0);
         detail::vector3d draw_pos;
 
         draw_pos.x = alpha * m_position.x + (1.0 - alpha) * m_last_position.x;
