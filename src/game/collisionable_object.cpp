@@ -58,84 +58,107 @@ namespace Game {
             const float mx = (p.x < 0.5f ? - p.x : 1.0f - p.x);
             const float my = (p.y < 0.5f ? - p.y : 1.0f - p.y);
             const float mz = (p.z < 0.5f ? - p.z : 1.0f - p.z);
-            const auto& [sx, sy, sz] = m_scale_axes.pos;
+            //const auto& [sx, sy, sz] = m_scale_axes.pos;
+
+            detail::vector3d d_local = transform_vector_to_local(d);
+            detail::vector3d position_corr_local{0.0f, 0.0f, 0.0f};
+            detail::vector3d speed_corr_local{0.0f, 0.0f, 0.0f};
+
+            // Helper lambda: applies the signed local offset directly and projects out inward velocity
+            const auto apply_slide_response = [&](const detail::vector3d& n_local, float local_offset) {
+                if (n_local.x != 0.0f) position_corr_local.x = local_offset;
+                if (n_local.y != 0.0f) position_corr_local.y = local_offset;
+                if (n_local.z != 0.0f) position_corr_local.z = local_offset;
+
+                // Project velocity against surface normal to allow clean sliding
+                float dot = d_local.x * n_local.x + d_local.y * n_local.y + d_local.z * n_local.z;
+                if (dot < 0.0f) {
+                    speed_corr_local.x -= dot * n_local.x;
+                    speed_corr_local.y -= dot * n_local.y;
+                    speed_corr_local.z -= dot * n_local.z;
+                }
+            };
 
             if (would_be_col[0] && would_be_col[1] && would_be_col[2]) {
-                if (fabsf(d.x) > fabsf(d.y) && fabsf(d.x) > fabsf(d.z)) {
-                    entity.combine_position({
-                        mx * sx * off,
-                        0.0f,
-                        0.0f
-                    });
+                if (fabsf(d_local.x) > fabsf(d_local.y) && fabsf(d_local.x) > fabsf(d_local.z)) {
+                    detail::vector3d n_local = (p.x < 0.5f) ? detail::vector3d{-1.0f, 0.0f, 0.0f} : detail::vector3d{1.0f, 0.0f, 0.0f};
+                    apply_slide_response(n_local, mx * off);
                 }
-                else if (fabsf(d.y) > fabsf(d.z)) {
-                    entity.combine_position({
-                        0.0f,
-                        my * sy * off,
-                        0.0f
-                    });
+                else if (fabsf(d_local.y) > fabsf(d_local.z)) {
+                    detail::vector3d n_local = (p.y < 0.5f) ? detail::vector3d{0.0f, -1.0f, 0.0f} : detail::vector3d{0.0f, 1.0f, 0.0f};
+                    apply_slide_response(n_local, my * off);
                 }
                 else {
-                    entity.combine_position({
-                        0.0f,
-                        0.0f,
-                        mz * sz * off
-                    });
+                    detail::vector3d n_local = (p.z < 0.5f) ? detail::vector3d{0.0f, 0.0f, -1.0f} : detail::vector3d{0.0f, 0.0f, 1.0f};
+                    apply_slide_response(n_local, mz * off);
                 }
-
-                entity.combine_speed({
-                    - d.x,
-                    - d.y,
-                    - d.z
-                });
             }
             else {
                 if (!would_be_col[1]) {
-                    entity.combine_speed({
-                        0.0f,
-                        - d.y,
-                        0.0f
-                    });
-                    entity.combine_position({
-                        0.0f,
-                        my * sy * off,
-                        0.0f
-                    });
+                    detail::vector3d n_local = (p.y < 0.5f) ? detail::vector3d{0.0f, -1.0f, 0.0f} : detail::vector3d{0.0f, 1.0f, 0.0f};
+                    apply_slide_response(n_local, my * off);
                 }
                 if (!would_be_col[0]) {
-                    entity.combine_speed({
-                        -d.x,
-                        0.0f,
-                        0.0f
-                    });
-                    entity.combine_position({
-                        mx * sx * off,
-                        0.0f,
-                        0.0f
-                    });
+                    detail::vector3d n_local = (p.x < 0.5f) ? detail::vector3d{-1.0f, 0.0f, 0.0f} : detail::vector3d{1.0f, 0.0f, 0.0f};
+                    apply_slide_response(n_local, mx * off);
                 }
                 if (!would_be_col[2]) {
-                    entity.combine_speed({
-                        0.0f,
-                        0.0f,
-                        -d.z,
-                    });
-                    entity.combine_position({
-                        0.0f,
-                        0.0f,
-                        mz * sz * off
-                    });
+                    detail::vector3d n_local = (p.z < 0.5f) ? detail::vector3d{0.0f, 0.0f, -1.0f} : detail::vector3d{0.0f, 0.0f, 1.0f};
+                    apply_slide_response(n_local, mz * off);
                 }
             }
+
+            // Convert final corrections back to world space
+            detail::vector3d world_pos_corr = transform_vector_to_world(position_corr_local);
+            detail::vector3d world_speed_corr = transform_vector_to_world(speed_corr_local);
+
+            entity.combine_position(world_pos_corr);
+            entity.combine_speed(world_speed_corr);
 
             return true;
         }
         return false;
     }
 
+    bool Object::work_collision(DynamicObject& entity) {
+        detail::vector3d p = entity.get_position();
+        detail::vector3d o = entity.get_last_position();
+        detail::vector3d d = entity.get_direction();
+        
+        m_inverse.transform_coordinates(p.x, p.y, p.z);
+        m_inverse.transform_coordinates(o.x, o.y, o.z);
+
+        // get corners
+        // check all corners for collision
+        // merge collisions as one
+        // handle from there
+
+        return false;
+    }
+
     const Graphics::Transform Object::get_draw_boundaries() const {
         return m_boundaries;
     }
+
+    detail::vector3d Object::transform_vector_to_world(detail::vector3d s) const {
+        detail::vector3d z{0.0f,0.0f,0.0f};
+        
+        m_boundaries.transform_coordinates(s.x, s.y, s.z);
+        m_boundaries.transform_coordinates(z.x, z.y, z.z);
+        
+        return { s.x - z.x, s.y - z.y, s.z - z.z };
+    }
+
+    detail::vector3d Object::transform_vector_to_local(detail::vector3d s) const {
+        detail::vector3d z{0.0f,0.0f,0.0f};
+        
+        m_inverse.transform_coordinates(s.x, s.y, s.z);
+        m_inverse.transform_coordinates(z.x, z.y, z.z);
+        
+        return { s.x - z.x, s.y - z.y, s.z - z.z };
+    }
+
+
 
     detail::vector3d& DynamicInterface::modify_gravity() {
         return m_gravity;

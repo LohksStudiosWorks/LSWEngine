@@ -68,7 +68,17 @@ int main(int argc, char *argv[]) {
 
     auto cubix = Game::Entity::create_static_entity(cube, bitmaps[0], ALLEGRO_PRIM_TRIANGLE_LIST);
 
-    cubix.as_object().move([](Graphics::Transform& t){ t.set_identity().scale(2.0f, 1.5f, 2.0f).translate(-1.0f, 0.0f, 0.0f); });
+    cubix.as_object().move([](Graphics::Transform& t){ t.scale(2.0f, 1.5f, 2.0f).translate(-3.0f, 0.0f, 0.0f); });
+
+    auto rotated_cubix = cubix.clone_to_static_entity();
+
+    rotated_cubix.as_object().move([](Graphics::Transform& t){ 
+        t.scale(10.0f, 10.0f, 10.0f)
+         .rotate(1.0f, 0.0f, 0.0f, ALLEGRO_PI / 4)
+         .rotate(0.0f, 1.0f, 0.0f, ALLEGRO_PI / 2)
+         .rotate(1.0f, 0.0f, 0.0f, ALLEGRO_PI / 4)
+         .translate(-20.0f, -7.5f, 0.0f);
+    });
 
     std::vector<Game::Entity> around_cubes;
     for(int x = 0; x < 3; ++x) {
@@ -108,6 +118,7 @@ int main(int argc, char *argv[]) {
             display.clear_depth_buffer(1.0f);
 
             cubix.draw();
+            rotated_cubix.draw();
             for(const auto& cubic : around_cubes) {
                 cubic.draw();
                 Game::WrapObjectDrawable wrap(cubic.as_object());
@@ -146,6 +157,8 @@ int main(int argc, char *argv[]) {
                 main_camera.tick();
 
                 cubix.as_object().work_collision(main_camera);
+                rotated_cubix.as_object().work_collision(main_camera);
+
                 for (auto& cubic : around_cubes)
                     cubic.as_object().work_collision(main_camera);
 

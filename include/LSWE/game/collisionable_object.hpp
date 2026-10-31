@@ -70,12 +70,14 @@ namespace Game {
 
         Object& move(std::function<void(Graphics::Transform&)> cb);
 
-        //bool work_collision(PlayerCamera& player);
         bool work_collision(DynamicPoint& entity);
-        //bool work_collision(DynamicObject& another_object);
+        bool work_collision(DynamicObject& entity);
 
         const Graphics::Transform get_draw_boundaries() const;
     protected:
+        detail::vector3d transform_vector_to_world(detail::vector3d s) const;
+        detail::vector3d transform_vector_to_local(detail::vector3d s) const;
+
         friend class WrapObjectDrawable;
         friend class Entity;
 
@@ -137,6 +139,7 @@ namespace Game {
     protected:
         void merge_movement_on_tick() override;
 
+        friend class Object;
         friend class Entity;
 
         Graphics::Transform m_last_boundaries;
