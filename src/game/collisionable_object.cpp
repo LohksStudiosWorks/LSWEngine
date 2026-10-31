@@ -54,46 +54,78 @@ namespace Game {
             p.z >= 0.0f && p.z <= 1.0f))
         {
             constexpr float off = 1.01f;
+
             const float mx = (p.x < 0.5f ? - p.x : 1.0f - p.x);
             const float my = (p.y < 0.5f ? - p.y : 1.0f - p.y);
             const float mz = (p.z < 0.5f ? - p.z : 1.0f - p.z);
             const auto& [sx, sy, sz] = m_scale_axes.pos;
 
-            if (!would_be_col[1]) {
+            if (would_be_col[0] && would_be_col[1] && would_be_col[2]) {
+                if (fabsf(d.x) > fabsf(d.y) && fabsf(d.x) > fabsf(d.z)) {
+                    entity.combine_position({
+                        mx * sx * off,
+                        0.0f,
+                        0.0f
+                    });
+                }
+                else if (fabsf(d.y) > fabsf(d.z)) {
+                    entity.combine_position({
+                        0.0f,
+                        my * sy * off,
+                        0.0f
+                    });
+                }
+                else {
+                    entity.combine_position({
+                        0.0f,
+                        0.0f,
+                        mz * sz * off
+                    });
+                }
+
                 entity.combine_speed({
-                    0.0f,
+                    - d.x,
                     - d.y,
-                    0.0f
-                });
-                entity.combine_position({
-                    0.0f,
-                    my * sy * off,
-                    0.0f
+                    - d.z
                 });
             }
-            if (!would_be_col[0]) {
-                entity.combine_speed({
-                    -d.x,
-                    0.0f,
-                    0.0f
-                });
-                entity.combine_position({
-                    mx * sx * off,
-                    0.0f,
-                    0.0f
-                });
-            }
-            if (!would_be_col[2]) {
-                entity.combine_speed({
-                    0.0f,
-                    0.0f,
-                    -d.z,
-                });
-                entity.combine_position({
-                    0.0f,
-                    0.0f,
-                    mz * sz * off
-                });
+            else {
+                if (!would_be_col[1]) {
+                    entity.combine_speed({
+                        0.0f,
+                        - d.y,
+                        0.0f
+                    });
+                    entity.combine_position({
+                        0.0f,
+                        my * sy * off,
+                        0.0f
+                    });
+                }
+                if (!would_be_col[0]) {
+                    entity.combine_speed({
+                        -d.x,
+                        0.0f,
+                        0.0f
+                    });
+                    entity.combine_position({
+                        mx * sx * off,
+                        0.0f,
+                        0.0f
+                    });
+                }
+                if (!would_be_col[2]) {
+                    entity.combine_speed({
+                        0.0f,
+                        0.0f,
+                        -d.z,
+                    });
+                    entity.combine_position({
+                        0.0f,
+                        0.0f,
+                        mz * sz * off
+                    });
+                }
             }
 
             return true;
