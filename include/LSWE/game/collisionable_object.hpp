@@ -32,6 +32,15 @@ namespace Game {
                     float x, y, z;
                 };
             };
+
+            vector3d& operator+=(float factor);
+            vector3d& operator-=(float factor);
+            vector3d& operator*=(float factor);
+            vector3d& operator/=(float factor);
+            vector3d& operator+=(vector3d oth);
+            vector3d& operator-=(vector3d oth);
+            vector3d& operator*=(vector3d oth);
+            vector3d& operator/=(vector3d oth);
         };
 
         struct vector2d {
@@ -75,8 +84,17 @@ namespace Game {
 
         const Graphics::Transform get_draw_boundaries() const;
     protected:
+        struct collision_res {
+            detail::vector3d delta_pos;
+            detail::vector3d delta_speed;
+            bool collided;
+        };
+
         detail::vector3d transform_vector_to_world(detail::vector3d s) const;
         detail::vector3d transform_vector_to_local(detail::vector3d s) const;
+
+        collision_res calculate_collision_for(DynamicPoint& entity);
+        collision_res calculate_collision_for(DynamicObject& entity);
 
         friend class WrapObjectDrawable;
         friend class Entity;
@@ -130,7 +148,8 @@ namespace Game {
     public:
         void combine_position(detail::vector3d pos);
 
-        //void set_position(detail::vector3d pos);
+        bool work_collision(DynamicPoint& entity);
+        bool work_collision(DynamicObject& entity);
         
         detail::vector3d get_position() const;
         detail::vector3d get_last_position() const;
@@ -168,5 +187,17 @@ constexpr Game::detail::flags_movement operator&(
         & static_cast<std::underlying_type_t<Game::detail::flags_movement>>(b)
     );
 }
+
+// --- Vector & Vector Operators ---
+inline Game::detail::vector3d operator+(Game::detail::vector3d lhs, const Game::detail::vector3d& rhs) { return lhs += rhs; }
+inline Game::detail::vector3d operator-(Game::detail::vector3d lhs, const Game::detail::vector3d& rhs) { return lhs -= rhs; }
+inline Game::detail::vector3d operator*(Game::detail::vector3d lhs, const Game::detail::vector3d& rhs) { return lhs *= rhs; }
+inline Game::detail::vector3d operator/(Game::detail::vector3d lhs, const Game::detail::vector3d& rhs) { return lhs /= rhs; }
+
+// --- Vector & Scalar Operators (Vector op Scalar) ---
+inline Game::detail::vector3d operator+(Game::detail::vector3d lhs, float factor) { return lhs += factor; }
+inline Game::detail::vector3d operator-(Game::detail::vector3d lhs, float factor) { return lhs -= factor; }
+inline Game::detail::vector3d operator*(Game::detail::vector3d lhs, float factor) { return lhs *= factor; }
+inline Game::detail::vector3d operator/(Game::detail::vector3d lhs, float factor) { return lhs /= factor; }
 
 } // namespace LSWE

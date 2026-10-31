@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
     cubix.as_object().move([](Graphics::Transform& t){ t.scale(2.0f, 1.5f, 2.0f).translate(-3.0f, 0.0f, 0.0f); });
 
     auto rotated_cubix = cubix.clone_to_static_entity();
+    auto pushable_cubix = cubix.clone_to_dynamic_entity();
 
     rotated_cubix.as_object().move([](Graphics::Transform& t){ 
         t.scale(10.0f, 10.0f, 10.0f)
@@ -79,6 +80,11 @@ int main(int argc, char *argv[]) {
          .rotate(1.0f, 0.0f, 0.0f, ALLEGRO_PI / 4)
          .translate(-20.0f, -7.5f, 0.0f);
     });
+
+    pushable_cubix.as_dynamic_object().move([](Graphics::Transform& t){ 
+        t.translate(15.0f, 0.0f, -5.0f);
+    });
+    pushable_cubix.as_dynamic_object().modify_momentum() = {0.99f, 0.9999f, 0.99f};
 
     std::vector<Game::Entity> around_cubes;
     for(int x = 0; x < 3; ++x) {
@@ -118,6 +124,7 @@ int main(int argc, char *argv[]) {
             display.clear_depth_buffer(1.0f);
 
             cubix.draw();
+            pushable_cubix.draw();
             rotated_cubix.draw();
             for(const auto& cubic : around_cubes) {
                 cubic.draw();
@@ -158,9 +165,16 @@ int main(int argc, char *argv[]) {
 
                 cubix.as_object().work_collision(main_camera);
                 rotated_cubix.as_object().work_collision(main_camera);
-
                 for (auto& cubic : around_cubes)
                     cubic.as_object().work_collision(main_camera);
+
+                cubix.as_object().work_collision(pushable_cubix.as_dynamic_object());
+                rotated_cubix.as_object().work_collision(pushable_cubix.as_dynamic_object());
+                for (auto& cubic : around_cubes)
+                    cubic.as_object().work_collision(pushable_cubix.as_dynamic_object());
+
+                pushable_cubix.as_dynamic_object().work_collision(main_camera);
+
 
                 Events::Keyboard key_state;
                 const bool ducked = key_state.get_down(ALLEGRO_KEY_LCTRL);
