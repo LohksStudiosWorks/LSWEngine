@@ -107,14 +107,6 @@ namespace Game {
     bool Object::work_collision(DynamicObject& entity) {
         auto res = calculate_collision_for(entity);
         if (res.collided) {
-            /*printf("COL: [P=%.3f:%.3f:%.3f S=%.3f:%.3f:%.3f]\n",
-                res.delta_pos.x,
-                res.delta_pos.y,
-                res.delta_pos.z,
-                res.delta_speed.x,
-                res.delta_speed.y,
-                res.delta_speed.z
-            );*/
             entity.combine_position(res.delta_pos);
             entity.combine_speed(res.delta_speed);
         }
@@ -159,13 +151,11 @@ namespace Game {
             detail::vector3d position_corr_local{0.0f, 0.0f, 0.0f};
             detail::vector3d speed_corr_local{0.0f, 0.0f, 0.0f};
 
-            // Helper lambda: applies the signed local offset directly and projects out inward velocity
             const auto apply_slide_response = [&position_corr_local,&d_local,&speed_corr_local](const detail::vector3d& n_local, float local_offset) {
                 if (n_local.x != 0.0f) position_corr_local.x += local_offset;
                 if (n_local.y != 0.0f) position_corr_local.y += local_offset;
                 if (n_local.z != 0.0f) position_corr_local.z += local_offset;
 
-                // Project velocity against surface normal to allow clean sliding
                 float dot = d_local.x * n_local.x + d_local.y * n_local.y + d_local.z * n_local.z;
                 if (dot < 0.0f) {
                     speed_corr_local.x -= dot * n_local.x;
@@ -175,7 +165,6 @@ namespace Game {
             };
 
             if (would_be_col[0] && would_be_col[1] && would_be_col[2]) {
-                // Use minimum absolute penetration depth instead of velocity magnitude
                 const float abs_mx = fabsf(mx);
                 const float abs_my = fabsf(my);
                 const float abs_mz = fabsf(mz);
@@ -214,7 +203,6 @@ namespace Game {
                 }
             }
 
-            // Convert final corrections back to world space
             detail::vector3d world_pos_corr = transform_vector_to_world(position_corr_local);
             detail::vector3d world_speed_corr = transform_vector_to_world(speed_corr_local);
             
@@ -240,33 +228,25 @@ namespace Game {
             {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}
         };
 
-        // --- STAGE 1: BROADPHASE (Center Distance & Scale Proximity Check) ---
-        // Compute max bounding radius or extent for both objects using their scale axes
         const float static_radius = 0.5f * std::sqrt(m_cache.m_scale_axes.x * m_cache.m_scale_axes.x + 
                                                      m_cache.m_scale_axes.y * m_cache.m_scale_axes.y + 
                                                      m_cache.m_scale_axes.z * m_cache.m_scale_axes.z);
 
-        // (Optional optimization: ensure DynamicObject also computes or tracks m_cache.m_scale_axes, 
-        // or use a safe upper-bound radius like 1.5f for a standard unit box)
-        constexpr float dynamic_radius = 0.866f; // roughly half-diagonal of a unit [0..1] cube (sqrt(3)/2)
+        constexpr float dynamic_radius = 0.866f;
 
         const float dx = m_cache.m_center.x - entity.m_cache.m_center.x;
         const float dy = m_cache.m_center.y - entity.m_cache.m_center.y;
         const float dz = m_cache.m_center.z - entity.m_cache.m_center.z;
         const float dist_sq = dx * dx + dy * dy + dz * dz;
 
-        // 1.5x combined radii threshold for broadphase inclusion
         const float max_allowed_dist = (static_radius + dynamic_radius) * 1.5f;
         if (dist_sq > (max_allowed_dist * max_allowed_dist)) {
-            //printf("FAR\n");
-            return { {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, false }; // Fast exit!
+            return { {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, false };
         }
-        //printf("NEAR ");
-        // ------------------------------------------------------------------
-
+        
         Object::collision_res res{};
 
-        // --- STAGE 2: NARROWPHASE (The 8 Corners Check) ---
+
         for (const auto& local_corner : local_corners) {
             detail::vector3d world_pt_current = local_corner;
             detail::vector3d world_pt_old = local_corner;
@@ -281,22 +261,21 @@ namespace Game {
             }
         }
 
-        // --- STAGE 3: INTERIOR FALLBACK (Trapped Inside Check) ---
+        
         detail::vector3d local_center = entity.m_cache.m_center;
         m_cache.m_inverse.transform_coordinates(local_center.x, local_center.y, local_center.z);
 
         if (local_center.x >= 0.0f && local_center.x <= 1.0f &&
             local_center.y >= 0.0f && local_center.y <= 1.0f &&
             local_center.z >= 0.0f && local_center.z <= 1.0f) 
-        {
-            // Find distance to the closest local face (0.0 or 1.0)
+        {            
             const float mx = (local_center.x < 0.5f ? -local_center.x : 1.0f - local_center.x);
             const float my = (local_center.y < 0.5f ? -local_center.y : 1.0f - local_center.y);
             const float mz = (local_center.z < 0.5f ? -local_center.z : 1.0f - local_center.z);
 
             detail::vector3d pos_corr_local{0.0f, 0.0f, 0.0f};
-            constexpr float half_size = 0.5f; // DynamicObject half-extent in local space
-            constexpr float off = 1.05f;       // Safety margin multiplier
+            constexpr float half_size = 0.5f;
+            constexpr float off = 1.05f;
 
             if (fabsf(mx) < fabsf(my) && fabsf(mx) < fabsf(mz)) {
                 const float penetration = (local_center.x < 0.5f) ? (local_center.x + half_size) : (1.0f + half_size - local_center.x);
@@ -316,19 +295,6 @@ namespace Game {
             res.collided = true;
         }
 
-
-        printf("[%.2f %.2f %.2f](%.5f %.5f %.5f) TEST={%.2f %.2f %.2f}\n",
-            res.delta_pos.x,
-            res.delta_pos.y,
-            res.delta_pos.z,
-            res.delta_speed.x,
-            res.delta_speed.y,
-            res.delta_speed.z,
-            entity.m_cache.m_center.x,
-            entity.m_cache.m_center.y,
-            entity.m_cache.m_center.z
-        );
-
         return res;
     }
 
@@ -346,7 +312,6 @@ namespace Game {
         
         return s - m_cache.m_transformed_zero;
     }
-
 
     detail::vector3d& DynamicInterface::modify_gravity() {
         return m_gravity;
@@ -495,7 +460,6 @@ namespace Game {
             (corners[1][2] + corners[0][2]) * 0.5f
         };
     }
-
 
 } // namespace Game
 } // namespace LSWE
