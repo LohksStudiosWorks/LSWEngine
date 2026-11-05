@@ -93,6 +93,7 @@ namespace Game {
         detail::vector3d transform_vector_to_world(detail::vector3d s) const;
         detail::vector3d transform_vector_to_local(detail::vector3d s) const;
 
+        collision_res calculate_collision_for(detail::vector3d dir, detail::vector3d pos);
         collision_res calculate_collision_for(DynamicPoint& entity);
         collision_res calculate_collision_for(DynamicObject& entity);
 

@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
     pushable_cubix.as_dynamic_object().move([](Graphics::Transform& t){ 
         t.translate(15.0f, 0.0f, -5.0f);
     });
-    pushable_cubix.as_dynamic_object().modify_momentum() = {0.9f, 0.0f, 0.9f};
+    pushable_cubix.as_dynamic_object().modify_momentum() = {0.99f, 0.0f, 0.99f};
 
     std::vector<Game::Entity> around_cubes;
     for(int x = 0; x < 3; ++x) {
@@ -181,15 +181,16 @@ int main(int argc, char *argv[]) {
                     cubic.as_object().work_collision(main_camera);
 
 
+                dyn_pushable.work_collision(main_camera);
                     
                 cubix.as_object().work_collision(dyn_pushable);
                 rotated_cubix.as_object().work_collision(dyn_pushable);
                 for (auto& cubic : around_cubes)
                     cubic.as_object().work_collision(dyn_pushable);
 
-
-
-                dyn_pushable.work_collision(main_camera);
+                if (dyn_pushable.get_position().y < 0.0f) {
+                    dyn_pushable.combine_position({0.0f, - dyn_pushable.get_position().y, 0.0f});
+                }
 
 
                 Events::Keyboard key_state;

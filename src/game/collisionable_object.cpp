@@ -99,14 +99,14 @@ namespace Game {
     bool Object::work_collision(DynamicObject& entity) {
         auto res = calculate_collision_for(entity);
         if (res.collided) {
-            /*printf("COL: [P=%.3f:%.3f:%.3f S=%.3f:%.3f:%.3f]\n",
+            printf("COL: [P=%.3f:%.3f:%.3f S=%.3f:%.3f:%.3f]\n",
                 res.delta_pos.x,
                 res.delta_pos.y,
                 res.delta_pos.z,
                 res.delta_speed.x,
                 res.delta_speed.y,
                 res.delta_speed.z
-            );*/
+            );
             entity.combine_position(res.delta_pos);
             entity.combine_speed(res.delta_speed);
         }
@@ -117,11 +117,16 @@ namespace Game {
         return m_boundaries;
     }
 
-    Object::collision_res Object::calculate_collision_for(DynamicPoint& entity) {
-        detail::vector3d p = entity.get_position();
-        detail::vector3d o = entity.get_last_position();
-        detail::vector3d d = entity.get_direction();
-        
+    Object::collision_res Object::calculate_collision_for(detail::vector3d dir, detail::vector3d pos) {
+        static Object::collision_res s_no_col = {
+            .delta_pos = {0.0f,0.0f,0.0f},
+            .delta_speed = {0.0f,0.0f,0.0f},
+            .collided = false
+        };
+
+        detail::vector3d& p = pos;
+        detail::vector3d o = pos - dir;
+
         m_inverse.transform_coordinates(p.x, p.y, p.z);
         m_inverse.transform_coordinates(o.x, o.y, o.z);
 
@@ -140,9 +145,8 @@ namespace Game {
             const float mx = (p.x < 0.5f ? - p.x : 1.0f - p.x);
             const float my = (p.y < 0.5f ? - p.y : 1.0f - p.y);
             const float mz = (p.z < 0.5f ? - p.z : 1.0f - p.z);
-            //const auto& [sx, sy, sz] = m_scale_axes.pos;
 
-            detail::vector3d d_local = transform_vector_to_local(d);
+            detail::vector3d d_local = transform_vector_to_local(dir);
             detail::vector3d position_corr_local{0.0f, 0.0f, 0.0f};
             detail::vector3d speed_corr_local{0.0f, 0.0f, 0.0f};
 
@@ -162,11 +166,16 @@ namespace Game {
             };
 
             if (would_be_col[0] && would_be_col[1] && would_be_col[2]) {
-                if (fabsf(d_local.x) > fabsf(d_local.y) && fabsf(d_local.x) > fabsf(d_local.z)) {
+                // Use minimum absolute penetration depth instead of velocity magnitude
+                const float abs_mx = fabsf(mx);
+                const float abs_my = fabsf(my);
+                const float abs_mz = fabsf(mz);
+
+                if (abs_mx < abs_my && abs_mx < abs_mz) {
                     detail::vector3d n_local = (p.x < 0.5f) ? detail::vector3d{-1.0f, 0.0f, 0.0f} : detail::vector3d{1.0f, 0.0f, 0.0f};
                     apply_slide_response(n_local, mx * off);
                 }
-                else if (fabsf(d_local.y) > fabsf(d_local.z)) {
+                else if (abs_my < abs_mz) {
                     detail::vector3d n_local = (p.y < 0.5f) ? detail::vector3d{0.0f, -1.0f, 0.0f} : detail::vector3d{0.0f, 1.0f, 0.0f};
                     apply_slide_response(n_local, my * off);
                 }
@@ -194,9 +203,6 @@ namespace Game {
             detail::vector3d world_pos_corr = transform_vector_to_world(position_corr_local);
             detail::vector3d world_speed_corr = transform_vector_to_world(speed_corr_local);
 
-            //entity.combine_position(world_pos_corr);
-            //entity.combine_speed(world_speed_corr);
-
             return {
                 .delta_pos = world_pos_corr,
                 .delta_speed = world_speed_corr,
@@ -204,11 +210,11 @@ namespace Game {
             };
         }
 
-        return {
-            .delta_pos = {0.0f,0.0f,0.0f},
-            .delta_speed = {0.0f,0.0f,0.0f},
-            .collided = false
-        };
+        return s_no_col;
+    }
+
+    Object::collision_res Object::calculate_collision_for(DynamicPoint& entity) {
+        return calculate_collision_for(entity.get_direction(), entity.get_position());
     }
 
     Object::collision_res Object::calculate_collision_for(DynamicObject& entity) {
@@ -219,77 +225,28 @@ namespace Game {
             {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}
         };
 
-        detail::vector3d d = entity.get_direction(); // Moving object's speed/velocity
+        const detail::vector3d d = entity.get_direction(); // Moving object's speed/velocity
+        Object::collision_res res{};
 
         for (const auto& local_corner : local_corners) {
-            // Step 1: Transform 'other's local corner into World Space using 'other.m_transform'
-            detail::vector3d world_pt = local_corner;
-            entity.m_boundaries.transform_coordinates(world_pt.x, world_pt.y, world_pt.z);
+            detail::vector3d world_pt_current = local_corner;
+            detail::vector3d world_pt_old = local_corner;
 
-            // Step 2: Transform that world point into 'this' (static) object's Local Space using 'this->m_inverse'
-            detail::vector3d p = world_pt;
-            m_inverse.transform_coordinates(p.x, p.y, p.z);
+            // Transform the corner into current and previous world space
+            entity.m_boundaries.transform_coordinates(world_pt_current.x, world_pt_current.y, world_pt_current.z);
+            entity.m_last_boundaries.transform_coordinates(world_pt_old.x, world_pt_old.y, world_pt_old.z);
 
-            // Step 3: Check if the corner falls inside 'this' (static) object's [0..1] box
-            if (p.x >= 0.0f && p.x <= 1.0f &&
-                p.y >= 0.0f && p.y <= 1.0f &&
-                p.z >= 0.0f && p.z <= 1.0f)
-            {
-                constexpr float off = 1.01f;
+            // Calculate the exact displacement vector for this specific corner
+            detail::vector3d corner_dir = world_pt_current - world_pt_old;
 
-                const float mx = (p.x < 0.5f ? -p.x : 1.0f - p.x);
-                const float my = (p.y < 0.5f ? -p.y : 1.0f - p.y);
-                const float mz = (p.z < 0.5f ? -p.z : 1.0f - p.z);
-
-                detail::vector3d d_local = transform_vector_to_local(d);
-                detail::vector3d position_corr_local{0.0f, 0.0f, 0.0f};
-                detail::vector3d speed_corr_local{0.0f, 0.0f, 0.0f};
-
-                // Lambda to apply position correction and project out inward velocity for sliding
-                auto apply_slide_response = [&](const detail::vector3d& n_local, float local_offset) {
-                    if (n_local.x != 0.0f) position_corr_local.x = local_offset;
-                    if (n_local.y != 0.0f) position_corr_local.y = local_offset;
-                    if (n_local.z != 0.0f) position_corr_local.z = local_offset;
-
-                    float dot = d_local.x * n_local.x + d_local.y * n_local.y + d_local.z * n_local.z;
-                    if (dot < 0.0f) {
-                        speed_corr_local.x -= dot * n_local.x;
-                        speed_corr_local.y -= dot * n_local.y;
-                        speed_corr_local.z -= dot * n_local.z;
-                    }
-                };
-
-                // Find the dominant axis of penetration relative to 'this'
-                if (fabsf(mx) > fabsf(my) && fabsf(mx) > fabsf(mz)) {
-                    detail::vector3d n_local = (p.x < 0.5f) ? detail::vector3d{-1.0f, 0.0f, 0.0f} : detail::vector3d{1.0f, 0.0f, 0.0f};
-                    apply_slide_response(n_local, mx * off);
-                }
-                else if (fabsf(my) > fabsf(mz)) {
-                    detail::vector3d n_local = (p.y < 0.5f) ? detail::vector3d{0.0f, -1.0f, 0.0f} : detail::vector3d{0.0f, 1.0f, 0.0f};
-                    apply_slide_response(n_local, my * off);
-                }
-                else {
-                    detail::vector3d n_local = (p.z < 0.5f) ? detail::vector3d{0.0f, 0.0f, -1.0f} : detail::vector3d{0.0f, 0.0f, 1.0f};
-                    apply_slide_response(n_local, mz * off);
-                }
-
-                // Convert corrections back to world space using 'this' (static) object's transform matrix
-                detail::vector3d world_pos_corr = transform_vector_to_world(position_corr_local);
-                detail::vector3d world_speed_corr = transform_vector_to_world(speed_corr_local);
-                
-                return {
-                    .delta_pos = world_pos_corr,
-                    .delta_speed = world_speed_corr,
-                    .collided = true
-                };
+            if ((res = calculate_collision_for(corner_dir, world_pt_current)).collided) {
+                printf("[%.1f:%.1f:%.1f]@[%.4f:%.4f:%.4f]\n",
+                    world_pt_current.x, world_pt_current.y, world_pt_current.z,
+                    d.x, d.y, d.z);
+                break;
             }
         }
-
-        return {
-            .delta_pos = {0.0f,0.0f,0.0f},
-            .delta_speed = {0.0f,0.0f,0.0f},
-            .collided = false
-        };
+        return res;
     }
 
     detail::vector3d Object::transform_vector_to_world(detail::vector3d s) const {
