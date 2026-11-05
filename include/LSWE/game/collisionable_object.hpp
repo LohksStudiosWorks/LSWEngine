@@ -37,10 +37,10 @@ namespace Game {
             vector3d& operator-=(float factor);
             vector3d& operator*=(float factor);
             vector3d& operator/=(float factor);
-            vector3d& operator+=(vector3d oth);
-            vector3d& operator-=(vector3d oth);
-            vector3d& operator*=(vector3d oth);
-            vector3d& operator/=(vector3d oth);
+            vector3d& operator+=(const vector3d& oth);
+            vector3d& operator-=(const vector3d& oth);
+            vector3d& operator*=(const vector3d& oth);
+            vector3d& operator/=(const vector3d& oth);
         };
 
         struct vector2d {
@@ -89,6 +89,12 @@ namespace Game {
             detail::vector3d delta_speed;
             bool collided;
         };
+        struct caching {
+            Graphics::Transform m_inverse;
+            detail::vector3d m_scale_axes{1.0f, 1.0f, 1.0f};
+            detail::vector3d m_center{};
+            detail::vector3d m_transformed_zero{};
+        };
 
         detail::vector3d transform_vector_to_world(detail::vector3d s) const;
         detail::vector3d transform_vector_to_local(detail::vector3d s) const;
@@ -100,9 +106,8 @@ namespace Game {
         friend class WrapObjectDrawable;
         friend class Entity;
 
-        Graphics::Transform m_boundaries, m_inverse;
-        detail::vector3d m_scale_axes{1.0f, 1.0f, 1.0f};
-        detail::vector3d m_center{};
+        Graphics::Transform m_boundaries;
+        caching m_cache;
     };
 
     class DynamicInterface {

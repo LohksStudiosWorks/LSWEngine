@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
 
     auto evq = Events::EventQueue::create();
     auto timed_ev = Events::Timer::create(1.0 / 60);
-    auto timed_close = Events::Timer::create(15.0);
+    auto timed_close = Events::Timer::create(150.0);
 
     evq << display;
     evq << Events::MouseEventSource();
@@ -180,8 +180,6 @@ int main(int argc, char *argv[]) {
                 for (auto& cubic : around_cubes)
                     cubic.as_object().work_collision(main_camera);
 
-
-                dyn_pushable.work_collision(main_camera);
                     
                 cubix.as_object().work_collision(dyn_pushable);
                 rotated_cubix.as_object().work_collision(dyn_pushable);
@@ -192,6 +190,7 @@ int main(int argc, char *argv[]) {
                     dyn_pushable.combine_position({0.0f, - dyn_pushable.get_position().y, 0.0f});
                 }
 
+                dyn_pushable.work_collision(main_camera);
 
                 Events::Keyboard key_state;
                 const bool ducked = key_state.get_down(ALLEGRO_KEY_LCTRL);
