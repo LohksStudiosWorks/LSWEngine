@@ -166,7 +166,6 @@ namespace Game {
         friend class Entity;
 
         Graphics::Transform m_last_boundaries;
-        detail::timing m_time;
     };
 
 
