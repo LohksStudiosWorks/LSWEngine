@@ -19,6 +19,10 @@ namespace Events {
     unsigned Mouse::get_num_buttons() {
         return al_get_mouse_num_buttons();
     }
+    
+    bool Mouse::get_cursor_position(int& x, int& y) {
+        return al_get_mouse_cursor_position(&x, &y);
+    }
 
     bool Mouse::set_xy(ALLEGRO_DISPLAY* display, int x, int y) {
         return al_set_mouse_xy(display, x, y);

@@ -11,6 +11,7 @@ namespace Events {
 
         static unsigned get_num_axes();
         static unsigned get_num_buttons();
+        static bool get_cursor_position(int& x, int& y);
         static bool set_xy(ALLEGRO_DISPLAY* display, int x, int y);
         static bool set_z(int z);
         static bool set_w(int w);
