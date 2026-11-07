@@ -57,10 +57,10 @@ namespace Utility {
             .type = type,
             .port = port
         };
-        const ALLEGRO_FILE_INTERFACE* interface = al_get_socket_file_interface();
+        const ALLEGRO_FILE_INTERFACE* interf = al_get_socket_file_interface();
         const size_t cfg_len = sizeof(cfg);
 
-        return FileSocket(uri ? uri : "", al_fopen_interface(interface, (char*)&cfg, (char*)&cfg_len));
+        return FileSocket(uri ? uri : "", al_fopen_interface(interf, (char*)&cfg, (char*)&cfg_len));
     }
 
     FileSocket FileSocket::accept() {

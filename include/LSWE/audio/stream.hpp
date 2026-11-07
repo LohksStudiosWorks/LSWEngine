@@ -5,6 +5,8 @@
 
 #include <memory>
 
+#include <LSWE/utility/file.hpp>
+
 namespace LSWE {
 namespace Audio {
 
@@ -12,7 +14,7 @@ namespace Audio {
     public:
         static Stream create(size_t fragment_count, unsigned int frag_samples, unsigned int freq = 48000, ALLEGRO_AUDIO_DEPTH depth = ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF conf = ALLEGRO_CHANNEL_CONF_2);
         static Stream load(const char* filename, size_t buffer_count = 4, unsigned samples = 2048);
-        static Stream load(ALLEGRO_FILE* file, const char* ident = ".wav", size_t buffer_count = 4, unsigned samples = 2048);
+        static Stream load(Utility::File&& file, const char* ident = ".wav", size_t buffer_count = 4, unsigned samples = 2048);
 
         void destroy();
         void drain();

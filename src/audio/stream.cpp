@@ -20,11 +20,13 @@ namespace Audio {
         return Stream(al_load_audio_stream(filename, buffer_count, samples));
     }
 
-    Stream Stream::load(ALLEGRO_FILE* file, const char* ident, size_t buffer_count, unsigned samples) {
+    Stream Stream::load(Utility::File&& file, const char* ident, size_t buffer_count, unsigned samples) {
         Utility::SingletonOf<Utility::AllegroInit>::instance().setup();
         Utility::SingletonOf<Utility::AllegroInitAudio>::instance().setup();
 
-        return Stream(al_load_audio_stream_f(file, ident, buffer_count, samples));
+        ALLEGRO_FILE* released = file.release();        
+
+        return Stream(al_load_audio_stream_f(released, ident, buffer_count, samples));
     }
 
     void Stream::destroy() {
