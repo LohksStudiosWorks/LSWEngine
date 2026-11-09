@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
 project(lsw-engine
-    DESCRIPTION "A simple memory library"
+    DESCRIPTION "Lohk's Studios Works Engine is a multimedia platform for development of games and applications using Allegro 5 framework."
     VERSION "6"
     LANGUAGES C CXX
 )

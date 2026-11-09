@@ -4,6 +4,8 @@
 
 #include <LSWE/graphics/bitmap.hpp>
 
+#include <string>
+
 namespace LSWE {
 namespace Graphics {
 
