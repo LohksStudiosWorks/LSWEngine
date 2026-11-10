@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
 
     auto evq = Events::EventQueue::create();
     auto timed_ev = Events::Timer::create(1.0 / 60);
-    auto timed_close = Events::Timer::create(150.0);
+    auto timed_close = Events::Timer::create(15.0);
 
     evq << display;
     evq << Events::MouseEventSource();
